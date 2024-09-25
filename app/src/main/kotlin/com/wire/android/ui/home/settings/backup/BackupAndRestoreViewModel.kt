@@ -191,12 +191,8 @@ class BackupAndRestoreViewModel
             }
 
             is VerifyBackupResult.Failure -> {
-                state = state.copy(restoreFileValidation = RestoreFileValidation.IncompatibleBackup)
-                val errorMessage = when (result) {
-                    is VerifyBackupResult.Failure.Generic -> result.error.toString()
-                    VerifyBackupResult.Failure.InvalidBackupFile -> "No valid files found in the backup"
-                }
-                appLogger.e("Failed to extract backup files: $errorMessage")
+                importDatabase(importedBackupPath)
+//                appLogger.e("Failed to extract backup files: $errorMessage")
             }
         }
     }
