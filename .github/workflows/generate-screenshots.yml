@@ -83,7 +83,7 @@ jobs:
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           git checkout -b "$BRANCH_NAME"
           git add .
-          git commit -m "test: update screenshot tests"
+          git diff-index --quiet HEAD || git commit -m "test: update screenshot tests"
           git push origin "$BRANCH_NAME"
 
       - name: Create PR
