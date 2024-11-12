@@ -28,6 +28,7 @@ plugins {
     id(libs.plugins.wire.hilt.get().pluginId)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.compose.compiler)
 
     id(libs.plugins.aboutLibraries.get().pluginId)
 

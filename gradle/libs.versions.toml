@@ -5,7 +5,7 @@ gradle = "8.8"
 
 # Kotlin
 grgitCore = "5.2.2"
-kotlin = "1.9.23"
+kotlin = "2.0.21"
 
 # KotlinX
 coroutines = "1.8.0"
@@ -14,7 +14,7 @@ ktx-immutableCollections = "0.3.8"
 ktx-serialization = "1.6.3"
 
 # Android Core / Architecture
-detekt = "1.23.6"
+detekt = "1.23.7"
 google-gms = "4.4.2"
 gms-location = "21.3.0"
 android-gradlePlugin = "8.5.2"
@@ -48,7 +48,6 @@ compose-qr = "1.0.1"
 # Compose
 composeBom = "2024.10.00"
 compose-activity = "1.9.2"
-compose-compiler = "1.5.13"
 compose-constraint = "1.0.1"
 compose-navigation = "2.7.7" # adjusted to work with compose-destinations "1.9.54"
 compose-destinations = "1.10.2"
@@ -84,7 +83,7 @@ openIdAppAuth = "0.11.1"
 # Other Tools
 aboutLibraries = "11.1.4"
 leakCanary = "2.14"
-ksp = "1.9.23-1.0.20"
+ksp = "2.0.21-1.0.25"
 
 # Benchmark
 benchmark-macro-junit4 = "1.3.0"
@@ -110,6 +109,7 @@ hamcrest = "2.2"
 
 [plugins]
 # 3rd Party plugins
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "android-gradlePlugin" }
 android-application = { id = "com.android.application", version.ref = "android-gradlePlugin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

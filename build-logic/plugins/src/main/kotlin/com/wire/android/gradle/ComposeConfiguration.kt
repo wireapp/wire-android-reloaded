@@ -18,7 +18,6 @@
 package com.wire.android.gradle
 
 import com.android.build.api.dsl.CommonExtension
-import findVersion
 import org.gradle.api.Project
 
 internal fun Project.configureCompose(
@@ -26,9 +25,5 @@ internal fun Project.configureCompose(
 ): Unit = with(commonExtension) {
     buildFeatures {
         compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = findVersion("compose.compiler").requiredVersion
     }
 }

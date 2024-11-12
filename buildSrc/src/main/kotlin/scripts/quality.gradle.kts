@@ -89,3 +89,11 @@ tasks.register("testCoverage") {
     description = "Reports code coverage on tests within the Wire Android codebase."
     dependsOn("koverXmlReport")
 }
+
+//configurations.matching { it.name == "detekt" }.all {
+//    resolutionStrategy.eachDependency {
+//        if (requested.group == "org.jetbrains.kotlin") {
+//            useVersion("1.9.23")
+//        }
+//    }
+//}
