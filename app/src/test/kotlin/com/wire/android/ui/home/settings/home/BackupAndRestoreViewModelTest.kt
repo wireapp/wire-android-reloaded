@@ -38,10 +38,10 @@ import com.wire.kalium.logic.feature.auth.ValidatePasswordUseCase
 import com.wire.kalium.logic.feature.backup.CreateBackupResult
 import com.wire.kalium.logic.feature.backup.CreateBackupUseCase
 import com.wire.kalium.logic.feature.backup.RestoreBackupResult
-import com.wire.kalium.logic.feature.backup.RestoreBackupResult.BackupRestoreFailure.BackupIOFailure
-import com.wire.kalium.logic.feature.backup.RestoreBackupResult.BackupRestoreFailure.IncompatibleBackup
-import com.wire.kalium.logic.feature.backup.RestoreBackupResult.BackupRestoreFailure.InvalidPassword
-import com.wire.kalium.logic.feature.backup.RestoreBackupResult.BackupRestoreFailure.InvalidUserId
+import com.wire.kalium.logic.feature.backup.RestoreBackupResult.Failure.BackupIOFailure
+import com.wire.kalium.logic.feature.backup.RestoreBackupResult.Failure.IncompatibleBackup
+import com.wire.kalium.logic.feature.backup.RestoreBackupResult.Failure.InvalidPassword
+import com.wire.kalium.logic.feature.backup.RestoreBackupResult.Failure.InvalidUserId
 import com.wire.kalium.logic.feature.backup.RestoreBackupResult.Failure
 import com.wire.kalium.logic.feature.backup.RestoreBackupUseCase
 import com.wire.kalium.logic.feature.backup.VerifyBackupResult

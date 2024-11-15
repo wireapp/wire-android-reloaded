@@ -39,11 +39,11 @@ import com.wire.kalium.logic.feature.auth.ValidatePasswordUseCase
 import com.wire.kalium.logic.feature.backup.CreateBackupResult
 import com.wire.kalium.logic.feature.backup.CreateBackupUseCase
 import com.wire.kalium.logic.feature.backup.RestoreBackupResult
-import com.wire.kalium.logic.feature.backup.RestoreBackupResult.BackupRestoreFailure.BackupIOFailure
-import com.wire.kalium.logic.feature.backup.RestoreBackupResult.BackupRestoreFailure.DecryptionFailure
-import com.wire.kalium.logic.feature.backup.RestoreBackupResult.BackupRestoreFailure.IncompatibleBackup
-import com.wire.kalium.logic.feature.backup.RestoreBackupResult.BackupRestoreFailure.InvalidPassword
-import com.wire.kalium.logic.feature.backup.RestoreBackupResult.BackupRestoreFailure.InvalidUserId
+import com.wire.kalium.logic.feature.backup.RestoreBackupResult.Failure.BackupIOFailure
+import com.wire.kalium.logic.feature.backup.RestoreBackupResult.Failure.DecryptionFailure
+import com.wire.kalium.logic.feature.backup.RestoreBackupResult.Failure.IncompatibleBackup
+import com.wire.kalium.logic.feature.backup.RestoreBackupResult.Failure.InvalidPassword
+import com.wire.kalium.logic.feature.backup.RestoreBackupResult.Failure.InvalidUserId
 import com.wire.kalium.logic.feature.backup.RestoreBackupUseCase
 import com.wire.kalium.logic.feature.backup.VerifyBackupResult
 import com.wire.kalium.logic.feature.backup.VerifyBackupUseCase
@@ -241,7 +241,7 @@ class BackupAndRestoreViewModel
                 }
 
                 is RestoreBackupResult.Failure -> {
-                    mapBackupRestoreFailure(result.failure)
+                    mapBackupRestoreFailure(result)
                 }
             }
         } else {
@@ -249,7 +249,7 @@ class BackupAndRestoreViewModel
         }
     }
 
-    private fun mapBackupRestoreFailure(failure: RestoreBackupResult.BackupRestoreFailure) = when (failure) {
+    private fun mapBackupRestoreFailure(failure: RestoreBackupResult.Failure) = when (failure) {
         InvalidPassword -> state = state.copy(
             backupRestoreProgress = BackupRestoreProgress.Failed,
             restoreFileValidation = RestoreFileValidation.PasswordRequired,
