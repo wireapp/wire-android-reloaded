@@ -94,10 +94,7 @@ class BackupAndRestoreViewModelTest {
     fun givenAnEmptyPassword_whenCreatingABackup_thenItCreatesItSuccessfully() = runTest {
         // Given
         val emptyPassword = ""
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withValidPassword()
-            .withSuccessfulCreation(emptyPassword)
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withValidPassword().withSuccessfulCreation(emptyPassword).arrange()
         backupAndRestoreViewModel.createBackupPasswordState.setTextAndPlaceCursorAtEnd(emptyPassword)
 
         // When
@@ -107,17 +104,14 @@ class BackupAndRestoreViewModelTest {
         // Then
         assert(backupAndRestoreViewModel.state.backupCreationProgress is BackupCreationProgress.Finished)
         assertFalse(backupAndRestoreViewModel.latestCreatedBackup?.isEncrypted!!)
-        coVerify(exactly = 1) { arrangement.createBackupFile(password = emptyPassword) }
+        coVerify(exactly = 1) { arrangement.createBackupFile(password = emptyPassword, any()) }
     }
 
     @Test
     fun givenANonEmptyPassword_whenCreatingABackup_thenItCreatesItSuccessfully() = runTest(dispatcher.default()) {
         // Given
         val password = "mayTh3ForceBeWIthYou"
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withValidPassword()
-            .withSuccessfulCreation(password)
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withValidPassword().withSuccessfulCreation(password).arrange()
         backupAndRestoreViewModel.createBackupPasswordState.setTextAndPlaceCursorAtEnd(password)
 
         // When
@@ -127,16 +121,14 @@ class BackupAndRestoreViewModelTest {
         // Then
         assertInstanceOf(BackupCreationProgress.Finished::class.java, backupAndRestoreViewModel.state.backupCreationProgress)
         assertTrue(backupAndRestoreViewModel.latestCreatedBackup?.isEncrypted!!)
-        coVerify(exactly = 1) { arrangement.createBackupFile(password = password) }
+        coVerify(exactly = 1) { arrangement.createBackupFile(password = password, any()) }
     }
 
     @Test
     fun givenAnEmptyPassword_whenValidating_thenItUpdatePasswordStateToValid() = runTest(dispatcher.default()) {
         // Given
         val password = ""
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withInvalidPassword()
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withInvalidPassword().arrange()
 
         // When
         backupAndRestoreViewModel.validateBackupCreationPassword(password)
@@ -151,9 +143,7 @@ class BackupAndRestoreViewModelTest {
     fun givenANonEmptyPassword_whenItIsInvalid_thenItUpdatePasswordValidationState() = runTest(dispatcher.default()) {
         // Given
         val password = "mayTh3ForceBeWIthYou"
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withInvalidPassword()
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withInvalidPassword().arrange()
 
         // When
         backupAndRestoreViewModel.validateBackupCreationPassword(password)
@@ -167,9 +157,7 @@ class BackupAndRestoreViewModelTest {
     fun givenANonEmptyPassword_whenItIsValid_thenItUpdatePasswordValidationState() = runTest(dispatcher.default()) {
         // Given
         val password = "mayTh3ForceBeWIthYou_"
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withValidPassword()
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withValidPassword().arrange()
 
         // When
         backupAndRestoreViewModel.validateBackupCreationPassword(password)
@@ -183,10 +171,7 @@ class BackupAndRestoreViewModelTest {
     fun givenANonEmptyPassword_whenCreatingABackupWithAGivenError_thenItReturnsAFailure() = runTest {
         // Given
         val password = "mayTh3ForceBeWIthYou"
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withValidPassword()
-            .withFailedCreation(password)
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withValidPassword().withFailedCreation(password).arrange()
         backupAndRestoreViewModel.createBackupPasswordState.setTextAndPlaceCursorAtEnd(password)
 
         // When
@@ -196,16 +181,14 @@ class BackupAndRestoreViewModelTest {
         // Then
         assertEquals(backupAndRestoreViewModel.state.backupCreationProgress, BackupCreationProgress.Failed)
         assert(backupAndRestoreViewModel.latestCreatedBackup == null)
-        coVerify(exactly = 1) { arrangement.createBackupFile(password = password) }
+        coVerify(exactly = 1) { arrangement.createBackupFile(password = password, any()) }
     }
 
     @Test
     fun givenACreatedBackup_whenSharingIt_thenTheStateIsResetButKeepsTheLastBackupDate() = runTest {
         // Given
         val storedBackup = BackupAndRestoreState.CreatedBackup("backupFilePath".toPath(), "backupName.zip", 100L, true)
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withPreviouslyCreatedBackup(storedBackup)
-            .withUpdateLastBackupData()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withPreviouslyCreatedBackup(storedBackup).withUpdateLastBackupData()
             .arrange()
 
         // When
@@ -290,9 +273,7 @@ class BackupAndRestoreViewModelTest {
     fun givenAStoredEncryptedBackup_whenChoosingIt_thenTheRequirePasswordDialogIsShown() = runTest(dispatcher.default()) {
         // Given
         val isBackupEncrypted = true
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withSuccessfulDBImport(isBackupEncrypted)
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withSuccessfulDBImport(isBackupEncrypted).arrange()
         val backupUri = "some-backup".toUri()
 
         // When
@@ -310,9 +291,7 @@ class BackupAndRestoreViewModelTest {
     @Test
     fun givenAStoredBackup_whenThereIsAnErrorVerifyingItsEncryption_thenTheRightErrorDialogIsShown() = runTest(dispatcher.default()) {
         // Given
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withFailedBackupVerification()
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withFailedBackupVerification().arrange()
         val backupUri = "some-backup".toUri()
 
         // When
@@ -352,9 +331,7 @@ class BackupAndRestoreViewModelTest {
     fun givenARestoreDialogShown_whenDismissingIt_thenTheTempImportedBackupPathIsDeleted() = runTest(dispatcher.default()) {
         // Given
         val mockUri = "some-backup"
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withSuccessfulDBImport(false)
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withSuccessfulDBImport(false).arrange()
         val backupUri = mockUri.toUri()
 
         // When
@@ -377,10 +354,7 @@ class BackupAndRestoreViewModelTest {
     fun givenAPasswordEncryptedBackup_whenRestoringIt_thenTheCorrectSuccessDialogIsShown() = runTest(dispatcher.default()) {
         // Given
         val password = "some-password"
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withSuccessfulBackupRestore()
-            .withRequestedPasswordDialog()
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withSuccessfulBackupRestore().withRequestedPasswordDialog().arrange()
         backupAndRestoreViewModel.restoreBackupPasswordState.setTextAndPlaceCursorAtEnd(password)
 
         // When
@@ -400,10 +374,8 @@ class BackupAndRestoreViewModelTest {
     fun givenAPasswordEncryptedBackup_whenRestoringWithWrongPassword_thenTheCorrectErrorDialogIsShown() = runTest(dispatcher.default()) {
         // Given
         val password = "some-password"
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withFailedDBImport(Failure(InvalidPassword))
-            .withRequestedPasswordDialog()
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withFailedDBImport(Failure(InvalidPassword))
+            .withRequestedPasswordDialog().arrange()
         backupAndRestoreViewModel.restoreBackupPasswordState.setTextAndPlaceCursorAtEnd(password)
 
         // When
@@ -424,10 +396,8 @@ class BackupAndRestoreViewModelTest {
         runTest(dispatcher.default()) {
             // Given
             val password = "some-password"
-            val (arrangement, backupAndRestoreViewModel) = Arrangement()
-                .withFailedDBImport(Failure(InvalidUserId))
-                .withRequestedPasswordDialog()
-                .arrange()
+            val (arrangement, backupAndRestoreViewModel) = Arrangement().withFailedDBImport(Failure(InvalidUserId))
+                .withRequestedPasswordDialog().arrange()
             backupAndRestoreViewModel.restoreBackupPasswordState.setTextAndPlaceCursorAtEnd(password)
 
             // When
@@ -447,10 +417,8 @@ class BackupAndRestoreViewModelTest {
     fun givenAPasswordEncryptedBackup_whenRestoringAnIncompatibleBackup_thenTheCorrectErrorDialogIsShown() = runTest(dispatcher.default()) {
         // Given
         val password = "some-password"
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withFailedDBImport(Failure(IncompatibleBackup("old format backup")))
-            .withRequestedPasswordDialog()
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withFailedDBImport(Failure(IncompatibleBackup("old format backup")))
+            .withRequestedPasswordDialog().arrange()
         backupAndRestoreViewModel.restoreBackupPasswordState.setTextAndPlaceCursorAtEnd(password)
 
         // When
@@ -470,11 +438,8 @@ class BackupAndRestoreViewModelTest {
     fun givenAPasswordEncryptedBackup_whenRestoringABackupWithAnIOError_thenTheCorrectErrorDialogIsShown() = runTest(dispatcher.default()) {
         // Given
         val password = "some-password"
-        val (arrangement, backupAndRestoreViewModel) = Arrangement()
-            .withFailedDBImport(Failure(BackupIOFailure("IO error")))
-            .withRequestedPasswordDialog()
-            .withValidPassword()
-            .arrange()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withFailedDBImport(Failure(BackupIOFailure("IO error")))
+            .withRequestedPasswordDialog().withValidPassword().arrange()
         backupAndRestoreViewModel.restoreBackupPasswordState.setTextAndPlaceCursorAtEnd(password)
 
         // When
@@ -490,6 +455,42 @@ class BackupAndRestoreViewModelTest {
         }
     }
 
+    @Test
+    fun givenBackupCreation_whenProgressUpdates_thenStateIsUpdatedCorrectly() = runTest {
+        // Given
+        val password = "blackAndRedFl4g"
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withValidPassword().withSuccessfulCreation(password).arrange()
+        backupAndRestoreViewModel.createBackupPasswordState.setTextAndPlaceCursorAtEnd(password)
+
+        // When
+        backupAndRestoreViewModel.createBackup()
+        advanceUntilIdle()
+
+        // Then
+        assert(backupAndRestoreViewModel.state.backupCreationProgress is BackupCreationProgress.Finished)
+        assertTrue(backupAndRestoreViewModel.latestCreatedBackup?.isEncrypted!!)
+        coVerify(exactly = 1) { arrangement.createBackupFile(password = password, any()) }
+    }
+
+    @Test
+    fun givenBackupRestore_whenProgressUpdates_thenStateIsUpdatedCorrectly() = runTest {
+        // Given
+        val backupUri = "some-backup".toUri()
+        val (arrangement, backupAndRestoreViewModel) = Arrangement().withSuccessfulDBImport(false).arrange()
+
+        // When
+        backupAndRestoreViewModel.chooseBackupFileToRestore(backupUri)
+        advanceUntilIdle()
+
+        // Then
+        assert(backupAndRestoreViewModel.state.backupRestoreProgress == BackupRestoreProgress.Finished)
+        assert(backupAndRestoreViewModel.state.restoreFileValidation == RestoreFileValidation.ValidNonEncryptedBackup)
+        assert(arrangement.fakeKaliumFileSystem.exists(backupAndRestoreViewModel.latestImportedBackupTempPath))
+        coVerify(exactly = 1) {
+            arrangement.fileManager.copyToPath(backupUri, backupAndRestoreViewModel.latestImportedBackupTempPath, any())
+        }
+    }
+
     private inner class Arrangement {
 
         init {
@@ -500,7 +501,7 @@ class BackupAndRestoreViewModelTest {
             withGetLastBackupDateSeconds()
             every { Uri.parse("some-backup") } returns mockUri
             coEvery { importBackup(any(), any()) } returns RestoreBackupResult.Success
-            coEvery { createBackupFile(any()) } returns CreateBackupResult.Success("".toPath(), 0L, "")
+            coEvery { createBackupFile(any(), any()) } returns CreateBackupResult.Success("".toPath(), 0L, "")
             coEvery { verifyBackup(any()) } returns VerifyBackupResult.Success.Encrypted
         }
 
@@ -539,11 +540,17 @@ class BackupAndRestoreViewModelTest {
             val backupFilePath = "some-file-path".toPath()
             val backupSize = 1000L
             val backupName = "some-backup.zip"
-            coEvery { createBackupFile(eq(password)) } returns CreateBackupResult.Success(backupFilePath, backupSize, backupName)
+            coEvery {
+                createBackupFile(eq(password), any())
+            } returns CreateBackupResult.Success(backupFilePath, backupSize, backupName)
         }
 
         fun withFailedCreation(password: String) = apply {
-            coEvery { createBackupFile(eq(password)) } returns CreateBackupResult.Failure(CoreFailure.Unknown(IOException("Some db error")))
+            coEvery {
+                createBackupFile(
+                    eq(password), any()
+                )
+            } returns CreateBackupResult.Failure(CoreFailure.Unknown(IOException("Some db error")))
         }
 
         fun withPreviouslyCreatedBackup(backup: BackupAndRestoreState.CreatedBackup) = apply {

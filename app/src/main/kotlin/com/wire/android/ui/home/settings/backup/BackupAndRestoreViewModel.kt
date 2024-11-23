@@ -104,21 +104,11 @@ class BackupAndRestoreViewModel
     }
 
     fun createBackup() = viewModelScope.launch {
-        // TODO: Find a way to update the creation progress more faithfully. For now we will just show this small delays to mimic the
-        //  progress also for small backups
-        updateCreationProgress(PROGRESS_25)
-        delay(SMALL_DELAY)
-        updateCreationProgress(PROGRESS_50)
-        delay(SMALL_DELAY)
-
-        when (val result = createBackupFile(createBackupPasswordState.text.toString())) {
+        when (val result = createBackupFile(createBackupPasswordState.text.toString(), ::updateCreationProgress)) {
             is CreateBackupResult.Success -> {
                 state = state.copy(backupCreationProgress = BackupCreationProgress.Finished(result.backupFileName))
                 latestCreatedBackup = BackupAndRestoreState.CreatedBackup(
-                    result.backupFilePath,
-                    result.backupFileName,
-                    result.backupFileSize,
-                    createBackupPasswordState.text.isNotEmpty()
+                    result.backupFilePath, result.backupFileName, result.backupFileSize, createBackupPasswordState.text.isNotEmpty()
                 )
                 createBackupPasswordState.clearText()
             }
@@ -223,8 +213,7 @@ class BackupAndRestoreViewModel
             is RestoreBackupResult.Failure -> {
                 appLogger.e("Error when restoring the backup db file caused by: ${result.failure.cause}")
                 state = state.copy(
-                    restoreFileValidation = RestoreFileValidation.IncompatibleBackup,
-                    backupRestoreProgress = BackupRestoreProgress.Failed
+                    restoreFileValidation = RestoreFileValidation.IncompatibleBackup, backupRestoreProgress = BackupRestoreProgress.Failed
                 )
                 AnonymousAnalyticsManagerImpl.sendEvent(event = AnalyticsEvent.BackupRestoreFailed)
             }
@@ -243,8 +232,7 @@ class BackupAndRestoreViewModel
             when (val result = importBackup(latestImportedBackupTempPath, restoreBackupPasswordState.text.toString())) {
                 RestoreBackupResult.Success -> {
                     state = state.copy(
-                        backupRestoreProgress = BackupRestoreProgress.Finished,
-                        restorePasswordValidation = PasswordValidation.Valid
+                        backupRestoreProgress = BackupRestoreProgress.Finished, restorePasswordValidation = PasswordValidation.Valid
                     )
                     restoreBackupPasswordState.clearText()
                     AnonymousAnalyticsManagerImpl.sendEvent(event = AnalyticsEvent.BackupRestoreSucceeded)
@@ -317,8 +305,10 @@ class BackupAndRestoreViewModel
         }
     }
 
-    private suspend fun updateCreationProgress(progress: Float) = withContext(dispatcher.main()) {
-        state = state.copy(backupCreationProgress = BackupCreationProgress.InProgress(progress))
+    private fun updateCreationProgress(progress: Float) {
+        viewModelScope.launch(dispatcher.main()) {
+            state = state.copy(backupCreationProgress = BackupCreationProgress.InProgress(progress))
+        }
     }
 
     internal companion object {
