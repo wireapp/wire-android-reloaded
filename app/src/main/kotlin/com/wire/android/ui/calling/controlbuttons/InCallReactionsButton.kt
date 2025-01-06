@@ -15,48 +15,49 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
-
 package com.wire.android.ui.calling.controlbuttons
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
 import com.wire.android.R
-import com.wire.android.ui.common.dimensions
 import com.wire.android.ui.theme.WireTheme
 import com.wire.android.util.ui.PreviewMultipleThemes
 
 @Composable
-fun CameraFlipButton(
-    onCameraFlipButtonClicked: () -> Unit,
+fun InCallReactionsButton(
+    isSelected: Boolean,
+    onInCallReactionsClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isOnFrontCamera: Boolean = false,
-    size: Dp = dimensions().defaultCallingControlsSize
 ) {
     WireCallControlButton(
-        isSelected = !isOnFrontCamera,
-        iconResId = when (isOnFrontCamera) {
-            true -> R.drawable.ic_camera_flipped
-            false -> R.drawable.ic_camera_flip
+        isSelected = isSelected,
+        iconResId = when (isSelected) {
+            true -> R.drawable.ic_incall_reactions
+            false -> R.drawable.ic_incall_reactions
         },
-        contentDescription = when (isOnFrontCamera) {
-            true -> R.string.content_description_calling_flip_camera_on
-            false -> R.string.content_description_calling_flip_camera_off
+        contentDescription = when (isSelected) {
+            true -> R.string.content_description_calling_unmute_call
+            false -> R.string.content_description_calling_mute_call
         },
-        onClick = onCameraFlipButtonClicked,
-        size = size,
-        modifier = modifier,
+        onClick = onInCallReactionsClick,
+        modifier = modifier
     )
 }
 
 @PreviewMultipleThemes
 @Composable
-fun PreviewCameraFlipButtonOn() = WireTheme {
-    CameraFlipButton(isOnFrontCamera = true, onCameraFlipButtonClicked = { })
+fun PreviewInCallReactionsButton() = WireTheme {
+    InCallReactionsButton(
+        isSelected = false,
+        onInCallReactionsClick = { }
+    )
 }
 
 @PreviewMultipleThemes
 @Composable
-fun PreviewCameraFlipButtonOff() = WireTheme {
-    CameraFlipButton(isOnFrontCamera = false, onCameraFlipButtonClicked = { })
+fun PreviewInCallReactionsButtonSelected() = WireTheme {
+    InCallReactionsButton(
+        isSelected = true,
+        onInCallReactionsClick = { }
+    )
 }

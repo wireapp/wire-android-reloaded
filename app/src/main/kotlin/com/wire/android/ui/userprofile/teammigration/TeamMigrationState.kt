@@ -23,6 +23,9 @@ import com.wire.kalium.logic.feature.user.migration.MigrateFromPersonalToTeamFai
 data class TeamMigrationState(
     val teamNameTextState: TextFieldState = TextFieldState(),
     val shouldShowMigrationLeaveDialog: Boolean = false,
+    val isMigrating: Boolean = false,
     val currentStep: Int = 0,
+    val username: String = "",
+    val teamUrl: String = "",
     val migrationFailure: MigrateFromPersonalToTeamFailure? = null
 )

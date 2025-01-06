@@ -120,6 +120,11 @@ fun SelfUserProfileScreen(
 ) {
     val legalHoldSubjectDialogState = rememberVisibilityState<Unit>()
 
+    LaunchedEffect(Unit) {
+        // Check if the user is able to migrate to a team account, every time the screen is shown
+        viewModelSelf.checkIfUserAbleToMigrateToTeamAccount()
+    }
+
     SelfUserProfileContent(
         state = viewModelSelf.userProfileState,
         onCloseClick = navigator::navigateBack,

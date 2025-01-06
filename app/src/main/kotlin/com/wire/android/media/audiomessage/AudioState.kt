@@ -17,20 +17,24 @@
  */
 package com.wire.android.media.audiomessage
 
+import androidx.annotation.StringRes
+import com.wire.android.R
+
 data class AudioState(
     val audioMediaPlayingState: AudioMediaPlayingState,
     val currentPositionInMs: Int,
-    val totalTimeInMs: TotalTimeInMs
+    val totalTimeInMs: TotalTimeInMs,
+    val wavesMask: List<Int>
 ) {
     companion object {
-        val DEFAULT = AudioState(AudioMediaPlayingState.Stopped, 0, TotalTimeInMs.NotKnown)
+        val DEFAULT = AudioState(AudioMediaPlayingState.Stopped, 0, TotalTimeInMs.NotKnown, listOf())
     }
 
     // if the back-end returned the total time, we use that, in case it didn't we use what we get from
     // the [ConversationAudioMessagePlayer.kt] which will emit the time once the users play the audio.
     fun sanitizeTotalTime(otherClientTotalTime: Int): TotalTimeInMs {
         if (otherClientTotalTime != 0) {
-           return TotalTimeInMs.Known(otherClientTotalTime)
+            return TotalTimeInMs.Known(otherClientTotalTime)
         }
 
         return totalTimeInMs
@@ -40,6 +44,27 @@ data class AudioState(
         object NotKnown : TotalTimeInMs()
 
         data class Known(val value: Int) : TotalTimeInMs()
+    }
+}
+
+@Suppress("MagicNumber")
+enum class AudioSpeed(val value: Float, @StringRes val titleRes: Int) {
+    NORMAL(1f, R.string.audio_speed_1),
+    FAST(1.5f, R.string.audio_speed_1_5),
+    MAX(2f, R.string.audio_speed_2);
+
+    fun toggle(): AudioSpeed = when (this) {
+        NORMAL -> FAST
+        FAST -> MAX
+        MAX -> NORMAL
+    }
+
+    companion object {
+        fun fromFloat(speed: Float): AudioSpeed = when {
+            (speed < FAST.value) -> NORMAL
+            (speed < MAX.value) -> FAST
+            else -> MAX
+        }
     }
 }
 
@@ -75,6 +100,11 @@ sealed class AudioMediaPlayerStateUpdate(
         override val messageId: String,
         val totalTimeInMs: Int
     ) : AudioMediaPlayerStateUpdate(messageId)
+
+    data class WaveMaskUpdate(
+        override val messageId: String,
+        val waveMask: List<Int>
+    ) : AudioMediaPlayerStateUpdate(messageId)
 }
 
 sealed class RecordAudioMediaPlayerStateUpdate {
@@ -88,5 +118,9 @@ sealed class RecordAudioMediaPlayerStateUpdate {
 
     data class TotalTimeUpdate(
         val totalTimeInMs: Int
+    ) : RecordAudioMediaPlayerStateUpdate()
+
+    data class WaveMaskUpdate(
+        val waveMask: List<Int>
     ) : RecordAudioMediaPlayerStateUpdate()
 }

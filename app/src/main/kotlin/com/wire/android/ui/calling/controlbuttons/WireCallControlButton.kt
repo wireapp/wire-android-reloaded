@@ -20,14 +20,13 @@ package com.wire.android.ui.calling.controlbuttons
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import com.wire.android.ui.common.button.WireButtonState
-import com.wire.android.ui.common.button.WireSecondaryIconButton
+import com.wire.android.ui.common.button.WirePrimaryIconButton
 import com.wire.android.ui.common.button.wireSecondaryButtonColors
 import com.wire.android.ui.common.colorsScheme
 import com.wire.android.ui.common.dimensions
@@ -39,10 +38,11 @@ fun WireCallControlButton(
     @StringRes contentDescription: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    size: Dp = dimensions().defaultCallingControlsSize,
+    width: Dp = dimensions().defaultCallingControlsWidth,
+    height: Dp = dimensions().defaultCallingControlsHeight,
     iconSize: Dp = dimensions().defaultCallingControlsIconSize
 ) {
-    WireSecondaryIconButton(
+    WirePrimaryIconButton(
         onButtonClicked = onClick,
         iconResource = iconResId,
         shape = CircleShape,
@@ -60,9 +60,9 @@ fun WireCallControlButton(
         },
         contentDescription = contentDescription,
         state = if (isSelected) WireButtonState.Selected else WireButtonState.Default,
-        minSize = DpSize(size, size),
-        minClickableSize = DpSize(size, size),
+        minSize = DpSize(width, height),
+        minClickableSize = DpSize(width, height),
         iconSize = iconSize,
-        modifier = modifier.size(size),
+        modifier = modifier,
     )
 }

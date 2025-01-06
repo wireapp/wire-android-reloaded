@@ -18,6 +18,8 @@
 
 package com.wire.android.ui.home.messagecomposer.state
 
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -27,8 +29,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import com.wire.android.ui.home.conversations.MessageComposerViewState
 import com.wire.android.ui.home.conversations.model.UIMessage
 import com.wire.android.ui.home.messagecomposer.model.MessageComposition
@@ -53,13 +53,13 @@ fun rememberMessageComposerStateHolder(
         mutableStateOf(draftMessageComposition)
     }
 
-    val messageTextFieldValue = remember { mutableStateOf(TextFieldValue()) }
+    val messageTextState = rememberTextFieldState()
 
     val messageCompositionHolder = remember {
         mutableStateOf(
             MessageCompositionHolder(
                 messageComposition = messageComposition,
-                messageTextFieldValue = messageTextFieldValue,
+                messageTextState = messageTextState,
                 onClearDraft = onClearDraft,
                 onSaveDraft = onSaveDraft,
                 onSearchMentionQueryChanged = onSearchMentionQueryChanged,
@@ -71,10 +71,7 @@ fun rememberMessageComposerStateHolder(
 
     LaunchedEffect(draftMessageComposition.draftText) {
         if (draftMessageComposition.draftText.isNotBlank()) {
-            messageTextFieldValue.value = messageTextFieldValue.value.copy(
-                text = draftMessageComposition.draftText,
-                selection = TextRange(draftMessageComposition.draftText.length) // Place cursor at the end of the new text
-            )
+            messageTextState.setTextAndPlaceCursorAtEnd(draftMessageComposition.draftText)
         }
 
         if (draftMessageComposition.selectedMentions.isNotEmpty()) {
@@ -95,14 +92,14 @@ fun rememberMessageComposerStateHolder(
 
     val messageCompositionInputStateHolder = rememberSaveable(
         saver = MessageCompositionInputStateHolder.saver(
-            messageTextFieldValue = messageTextFieldValue,
+            messageTextState = messageTextState,
             keyboardController = keyboardController,
             focusRequester = focusRequester,
             density = density
         )
     ) {
         MessageCompositionInputStateHolder(
-            messageTextFieldValue = messageTextFieldValue,
+            messageTextState = messageTextState,
             keyboardController = keyboardController,
             focusRequester = focusRequester
         )

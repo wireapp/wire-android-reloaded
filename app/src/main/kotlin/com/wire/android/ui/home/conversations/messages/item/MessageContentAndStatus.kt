@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.wire.android.R
+import com.wire.android.media.audiomessage.AudioSpeed
 import com.wire.android.media.audiomessage.AudioState
 import com.wire.android.model.Clickable
 import com.wire.android.ui.common.dimensions
@@ -41,10 +42,12 @@ internal fun UIMessage.Regular.MessageContentAndStatus(
     assetStatus: AssetTransferStatus?,
     searchQuery: String,
     audioState: AudioState?,
+    audioSpeed: AudioSpeed,
     onAssetClicked: (String) -> Unit,
     onImageClicked: (UIMessage.Regular, Boolean) -> Unit,
     onAudioClicked: (String) -> Unit,
     onAudioPositionChanged: (String, Int) -> Unit,
+    onAudioSpeedChange: (AudioSpeed) -> Unit,
     onProfileClicked: (String) -> Unit,
     onLinkClicked: (String) -> Unit,
     onReplyClicked: (UIMessage.Regular) -> Unit,
@@ -73,11 +76,13 @@ internal fun UIMessage.Regular.MessageContentAndStatus(
                 messageContent = messageContent,
                 searchQuery = searchQuery,
                 audioState = audioState,
+                audioSpeed = audioSpeed,
                 assetStatus = assetStatus,
                 onAudioClick = onAudioClicked,
                 onChangeAudioPosition = onAudioPositionChanged,
                 onAssetClick = onAssetClickable,
                 onImageClick = onImageClickable,
+                onAudioSpeedChange = onAudioSpeedChange,
                 onOpenProfile = onProfileClicked,
                 onLinkClick = onLinkClicked,
                 onReplyClick = onReplyClickable,
@@ -105,11 +110,13 @@ private fun MessageContent(
     messageContent: UIMessageContent.Regular?,
     searchQuery: String,
     audioState: AudioState?,
+    audioSpeed: AudioSpeed,
     assetStatus: AssetTransferStatus?,
     onAssetClick: Clickable,
     onImageClick: Clickable,
     onAudioClick: (String) -> Unit,
     onChangeAudioPosition: (String, Int) -> Unit,
+    onAudioSpeedChange: (AudioSpeed) -> Unit,
     onOpenProfile: (String) -> Unit,
     onLinkClick: (String) -> Unit,
     onReplyClick: Clickable,
@@ -233,10 +240,13 @@ private fun MessageContent(
                     audioMediaPlayingState = audioMessageState.audioMediaPlayingState,
                     totalTimeInMs = totalTimeInMs,
                     currentPositionInMs = audioMessageState.currentPositionInMs,
+                    audioSpeed = audioSpeed,
+                    waveMask = audioMessageState.wavesMask,
                     onPlayButtonClick = { onAudioClick(message.header.messageId) },
                     onSliderPositionChange = { position ->
                         onChangeAudioPosition(message.header.messageId, position.toInt())
                     },
+                    onAudioSpeedChange = { onAudioSpeedChange(audioSpeed.toggle()) }
                 )
                 PartialDeliveryInformation(messageContent.deliveryStatus)
             }

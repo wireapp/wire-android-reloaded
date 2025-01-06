@@ -81,6 +81,8 @@ class WireColorScheme(
     // accents
     val groupAvatarColors: List<Color>,
     val wireAccentColors: WireAccentColors,
+
+    val emojiBackgroundColor: Color,
 ) {
     fun toColorScheme(): ColorScheme = ColorScheme(
         primary = primary, onPrimary = onPrimary,
@@ -182,6 +184,7 @@ private val LightWireColorScheme = WireColorScheme(
             Accent.Unknown -> WireColorPalette.LightBlue500
         }
     },
+    emojiBackgroundColor = Color.White,
 )
 
 // Dark WireColorScheme
@@ -257,6 +260,7 @@ private val DarkWireColorScheme = WireColorScheme(
             Accent.Unknown -> WireColorPalette.DarkBlue500
         }
     },
+    emojiBackgroundColor = Color.White,
 )
 
 @PackagePrivate

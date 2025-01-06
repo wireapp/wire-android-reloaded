@@ -162,7 +162,8 @@ class GroupConversationDetailsViewModel @Inject constructor(
                     mlsVerificationStatus = groupDetails.conversation.mlsVerificationStatus,
                     proteusVerificationStatus = groupDetails.conversation.proteusVerificationStatus,
                     isUnderLegalHold = groupDetails.conversation.legalHoldStatus.showLegalHoldIndicator(),
-                    isFavorite = groupDetails.isFavorite
+                    isFavorite = groupDetails.isFavorite,
+                    isDeletingConversationLocallyRunning = false
                 )
 
                 updateState(

@@ -112,7 +112,6 @@ class SelfUserProfileViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             fetchSelfUser()
-            checkIfUserAbleToMigrateToTeamAccount()
             observeEstablishedCall()
             fetchIsReadOnlyAccount()
             observeLegalHoldStatus()
@@ -120,9 +119,8 @@ class SelfUserProfileViewModel @Inject constructor(
         }
     }
 
-    private suspend fun checkIfUserAbleToMigrateToTeamAccount() {
-        val isAbleToMigrateToTeamAccount = canMigrateFromPersonalToTeam() && userProfileState.teamName.isNullOrBlank()
-        userProfileState = userProfileState.copy(isAbleToMigrateToTeamAccount = isAbleToMigrateToTeamAccount)
+    suspend fun checkIfUserAbleToMigrateToTeamAccount() {
+        userProfileState = userProfileState.copy(isAbleToMigrateToTeamAccount = canMigrateFromPersonalToTeam())
     }
 
     private suspend fun fetchIsReadOnlyAccount() {

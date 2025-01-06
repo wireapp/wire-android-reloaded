@@ -34,6 +34,7 @@ import com.wire.android.ui.home.conversationslist.model.GroupDialogState
 class ConversationsDialogsState(
     val leaveGroupDialogState: VisibilityState<GroupDialogState>,
     val deleteGroupDialogState: VisibilityState<GroupDialogState>,
+    val deleteGroupLocallyDialogState: VisibilityState<GroupDialogState>,
     val blockUserDialogState: VisibilityState<BlockUserDialogState>,
     val unblockUserDialogState: VisibilityState<UnblockUserDialogState>,
     val clearContentDialogState: VisibilityState<DialogState>,
@@ -48,6 +49,7 @@ fun rememberConversationsDialogsState(requestInProgress: Boolean): Conversations
 
     val leaveGroupDialogState = rememberVisibilityState<GroupDialogState>()
     val deleteGroupDialogState = rememberVisibilityState<GroupDialogState>()
+    val deleteGroupLocallyDialogState = rememberVisibilityState<GroupDialogState>()
     val blockUserDialogState = rememberVisibilityState<BlockUserDialogState>()
     val unblockUserDialogState = rememberVisibilityState<UnblockUserDialogState>()
     val clearContentDialogState = rememberVisibilityState<DialogState>()
@@ -57,6 +59,7 @@ fun rememberConversationsDialogsState(requestInProgress: Boolean): Conversations
         ConversationsDialogsState(
             leaveGroupDialogState,
             deleteGroupDialogState,
+            deleteGroupLocallyDialogState,
             blockUserDialogState,
             unblockUserDialogState,
             clearContentDialogState,

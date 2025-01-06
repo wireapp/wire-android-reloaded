@@ -42,6 +42,7 @@ import com.wire.android.ui.theme.WireTheme
 fun BottomLineButtons(
     isContinueButtonEnabled: Boolean,
     modifier: Modifier = Modifier,
+    isMigrating: Boolean = false,
     isBackButtonVisible: Boolean = true,
     backButtonContentDescription: String = stringResource(R.string.personal_to_team_migration_back_button_label),
     onBack: () -> Unit = { },
@@ -67,7 +68,12 @@ fun BottomLineButtons(
                     .fillMaxWidth()
                     .semantics(true) { contentDescription = backButtonContentDescription },
                 text = stringResource(R.string.personal_to_team_migration_back_button_label),
-                onClick = onBack
+                onClick = onBack,
+                state = if (isMigrating) {
+                    WireButtonState.Disabled
+                } else {
+                    WireButtonState.Default
+                }
             )
         }
 
@@ -77,7 +83,8 @@ fun BottomLineButtons(
                 .padding(top = dimensions().spacing6x),
             text = stringResource(R.string.label_continue),
             onClick = onContinue,
-            state = if (isContinueButtonEnabled) {
+            loading = isMigrating,
+            state = if (isContinueButtonEnabled && !isMigrating) {
                 WireButtonState.Default
             } else {
                 WireButtonState.Disabled
@@ -91,6 +98,7 @@ fun BottomLineButtons(
 private fun BottomLineButtonsPreview() {
     WireTheme {
         BottomLineButtons(
+            isMigrating = false,
             isContinueButtonEnabled = true
         )
     }

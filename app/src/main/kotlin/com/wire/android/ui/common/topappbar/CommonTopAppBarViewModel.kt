@@ -29,9 +29,14 @@ import com.wire.android.util.CurrentScreenManager
 import com.wire.kalium.logic.CoreLogic
 import com.wire.kalium.logic.data.call.Call
 import com.wire.kalium.logic.data.call.CallStatus
-import com.wire.kalium.logic.data.sync.SyncState
+import com.wire.kalium.logic.data.sync.SyncState.Failed
+import com.wire.kalium.logic.data.sync.SyncState.GatheringPendingEvents
+import com.wire.kalium.logic.data.sync.SyncState.Live
+import com.wire.kalium.logic.data.sync.SyncState.SlowSync
+import com.wire.kalium.logic.data.sync.SyncState.Waiting
 import com.wire.kalium.logic.data.user.UserId
 import com.wire.kalium.logic.feature.session.CurrentSessionResult
+import com.wire.kalium.network.NetworkState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -40,7 +45,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.annotations.VisibleForTesting
 import javax.inject.Inject
@@ -59,12 +63,19 @@ class CommonTopAppBarViewModel @Inject constructor(
 
     private fun connectivityFlow(userId: UserId): Flow<Connectivity> =
         coreLogic.sessionScope(userId) {
-            observeSyncState().map {
-                when (it) {
-                    SyncState.Waiting -> Connectivity.WaitingConnection(null, null)
-                    is SyncState.Failed -> Connectivity.WaitingConnection(it.cause, it.retryDelay)
-                    SyncState.GatheringPendingEvents, SyncState.SlowSync -> Connectivity.Connecting
-                    SyncState.Live -> Connectivity.Connected
+            combine(observeSyncState(), coreLogic.networkStateObserver.observeNetworkState()) { syncState, networkState ->
+                when (syncState) {
+                    is Waiting -> Connectivity.WaitingConnection(null, null)
+                    is Failed -> Connectivity.WaitingConnection(syncState.cause, syncState.retryDelay)
+                    is GatheringPendingEvents,
+                    is SlowSync -> Connectivity.Connecting
+
+                    is Live ->
+                        if (networkState is NetworkState.ConnectedWithInternet) {
+                            Connectivity.Connected
+                        } else {
+                            Connectivity.WaitingConnection(null, null)
+                        }
                 }
             }
         }

@@ -20,9 +20,7 @@ package com.wire.android.ui.calling.controlbuttons
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
 import com.wire.android.R
-import com.wire.android.ui.common.dimensions
 import com.wire.android.ui.theme.WireTheme
 import com.wire.android.util.ui.PreviewMultipleThemes
 
@@ -31,7 +29,6 @@ fun SpeakerButton(
     isSpeakerOn: Boolean,
     onSpeakerButtonClicked: () -> Unit,
     modifier: Modifier = Modifier,
-    size: Dp = dimensions().defaultCallingControlsSize
 ) {
     WireCallControlButton(
         isSelected = isSpeakerOn,
@@ -44,7 +41,6 @@ fun SpeakerButton(
             false -> R.string.content_description_calling_turn_speaker_on
         },
         onClick = onSpeakerButtonClicked,
-        size = size,
         modifier = modifier,
     )
 }

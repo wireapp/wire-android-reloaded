@@ -44,7 +44,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.wire.android.R
-import com.wire.android.media.audiomessage.AudioState
 import com.wire.android.navigation.NavigationCommand
 import com.wire.android.navigation.Navigator
 import com.wire.android.navigation.WireDestination
@@ -70,6 +69,7 @@ import com.wire.android.ui.home.conversations.DownloadedAssetDialog
 import com.wire.android.ui.home.conversations.PermissionPermanentlyDeniedDialogState
 import com.wire.android.ui.home.conversations.delete.DeleteMessageDialog
 import com.wire.android.ui.home.conversations.edit.assetOptionsMenuItems
+import com.wire.android.ui.home.conversations.messages.AudioMessagesState
 import com.wire.android.ui.home.conversations.messages.ConversationMessagesViewModel
 import com.wire.android.ui.theme.WireTheme
 import com.wire.android.ui.theme.wireDimensions
@@ -78,8 +78,6 @@ import com.wire.android.util.ui.SnackBarMessageHandler
 import com.wire.android.util.ui.UIText
 import com.wire.android.util.ui.openDownloadFolder
 import com.wire.kalium.logic.data.id.ConversationId
-import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.launch
 
 @RootNavGraph
@@ -169,7 +167,7 @@ fun ConversationMediaScreen(
 @Composable
 private fun Content(
     state: ConversationAssetMessagesViewState,
-    audioMessagesState: PersistentMap<String, AudioState> = persistentMapOf(),
+    audioMessagesState: AudioMessagesState = AudioMessagesState(),
     initialPage: ConversationMediaScreenTabItem = ConversationMediaScreenTabItem.PICTURES,
     onImageFullScreenMode: (conversationId: ConversationId, messageId: String, isSelfAsset: Boolean) -> Unit = { _, _, _ -> },
     onPlayAudioItemClicked: (String) -> Unit = {},

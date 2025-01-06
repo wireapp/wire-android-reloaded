@@ -27,6 +27,7 @@ import com.wire.android.feature.StartPersistentWebsocketIfNecessaryUseCase
 import com.wire.android.migration.MigrationManager
 import com.wire.android.notification.NotificationChannelsManager
 import com.wire.android.notification.WireNotificationManager
+import com.wire.android.workmanager.worker.DeleteConversationLocallyWorker
 import com.wire.android.workmanager.worker.MigrationWorker
 import com.wire.android.workmanager.worker.NotificationFetchWorker
 import com.wire.android.workmanager.worker.PersistentWebsocketCheckWorker
@@ -62,6 +63,9 @@ class WireWorkerFactory @Inject constructor(
 
             PersistentWebsocketCheckWorker::class.java.canonicalName ->
                 PersistentWebsocketCheckWorker(appContext, workerParameters, startPersistentWebsocketIfNecessary)
+
+            DeleteConversationLocallyWorker::class.java.canonicalName ->
+                DeleteConversationLocallyWorker(appContext, workerParameters, coreLogic)
 
             else -> null
         }

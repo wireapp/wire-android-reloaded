@@ -38,7 +38,7 @@ import com.wire.android.util.ui.PreviewMultipleThemes
 fun HangUpButton(
     onHangUpButtonClicked: () -> Unit,
     modifier: Modifier = Modifier,
-    size: Dp = dimensions().bigCallingControlsSize,
+    size: Dp = dimensions().defaultCallingControlsHeight,
     iconSize: Dp = dimensions().bigCallingHangUpButtonIconSize,
 ) {
     WirePrimaryIconButton(

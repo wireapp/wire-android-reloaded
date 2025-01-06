@@ -35,6 +35,7 @@ import com.wire.android.ui.home.conversations.model.MessageSource
 import com.wire.android.ui.home.conversations.model.MessageStatus
 import com.wire.android.ui.home.conversations.model.MessageTime
 import com.wire.android.ui.home.conversations.model.UIMessage
+import com.wire.android.ui.home.conversations.model.UIMessageContent
 import com.wire.android.ui.navArgs
 import com.wire.android.util.FileManager
 import com.wire.android.util.ui.UIText
@@ -45,6 +46,7 @@ import com.wire.kalium.logic.data.conversation.ConversationDetails
 import com.wire.kalium.logic.data.conversation.InteractionAvailability
 import com.wire.kalium.logic.data.id.ConversationId
 import com.wire.kalium.logic.data.sync.SyncState
+import com.wire.kalium.logic.data.user.AssetId
 import com.wire.kalium.logic.data.user.ConnectionState
 import com.wire.kalium.logic.data.user.OtherUser
 import com.wire.kalium.logic.data.user.UserAssetId
@@ -232,5 +234,28 @@ internal fun mockUITextMessage(id: String = "someId", userName: String = "mockUs
             )
         }
         every { it.messageContent } returns null
+    }
+}
+
+internal fun mockUIAudioMessage(id: String = "someId", userName: String = "mockUserName"): UIMessage {
+    return mockk<UIMessage.Regular>().also {
+        every { it.userAvatarData } returns UserAvatarData()
+        every { it.source } returns MessageSource.OtherUser
+        every { it.header } returns mockk<MessageHeader>().also {
+            every { it.messageId } returns id
+            every { it.username } returns UIText.DynamicString(userName)
+            every { it.showLegalHoldIndicator } returns false
+            every { it.messageTime } returns MessageTime(Instant.DISTANT_PAST)
+            every { it.messageStatus } returns MessageStatus(
+                flowStatus = MessageFlowStatus.Sent,
+                expirationStatus = ExpirationStatus.NotExpirable
+            )
+        }
+        every { it.messageContent } returns UIMessageContent.AudioAssetMessage(
+            "assert_name",
+            ".mp4",
+            AssetId("value", "domain"),
+            1000L
+        )
     }
 }

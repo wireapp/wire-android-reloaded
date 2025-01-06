@@ -129,7 +129,7 @@ private fun TeamMigrationTeamNameStepScreenContent(
                 textFieldState = teamNameTextFieldState,
             )
         }
-        val isContinueButtonEnabled = teamNameTextFieldState.text.isNotEmpty()
+        val isContinueButtonEnabled = teamNameTextFieldState.text.isNotEmpty() && teamNameTextFieldState.text.isNotBlank()
         BottomLineButtons(
             isContinueButtonEnabled = isContinueButtonEnabled,
             onContinue = onContinueButtonClicked,

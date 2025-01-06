@@ -19,35 +19,50 @@
 package com.wire.android.ui.calling
 
 import android.view.View
+import app.cash.turbine.test
+import com.wire.android.assertIs
 import com.wire.android.config.CoroutineTestExtension
 import com.wire.android.config.NavigationTestExtension
 import com.wire.android.config.TestDispatcherProvider
+import com.wire.android.framework.TestUser
 import com.wire.android.mapper.UICallParticipantMapper
 import com.wire.android.mapper.UserTypeMapper
 import com.wire.android.media.CallRinger
+import com.wire.android.ui.calling.model.ReactionSender
+import com.wire.kalium.logic.NetworkFailure
+import com.wire.kalium.logic.data.call.Call
+import com.wire.kalium.logic.data.call.InCallReactionMessage
 import com.wire.kalium.logic.data.call.VideoState
+import com.wire.kalium.logic.data.conversation.ClientId
 import com.wire.kalium.logic.data.id.ConversationId
 import com.wire.kalium.logic.feature.call.usecase.EndCallUseCase
 import com.wire.kalium.logic.feature.call.usecase.FlipToBackCameraUseCase
 import com.wire.kalium.logic.feature.call.usecase.FlipToFrontCameraUseCase
 import com.wire.kalium.logic.feature.call.usecase.MuteCallUseCase
 import com.wire.kalium.logic.feature.call.usecase.ObserveEstablishedCallWithSortedParticipantsUseCase
+import com.wire.kalium.logic.feature.call.usecase.ObserveInCallReactionsUseCase
 import com.wire.kalium.logic.feature.call.usecase.ObserveSpeakerUseCase
 import com.wire.kalium.logic.feature.call.usecase.SetVideoPreviewUseCase
 import com.wire.kalium.logic.feature.call.usecase.TurnLoudSpeakerOffUseCase
 import com.wire.kalium.logic.feature.call.usecase.TurnLoudSpeakerOnUseCase
 import com.wire.kalium.logic.feature.call.usecase.UnMuteCallUseCase
 import com.wire.kalium.logic.feature.call.usecase.video.UpdateVideoStateUseCase
+import com.wire.kalium.logic.feature.client.ObserveCurrentClientIdUseCase
 import com.wire.kalium.logic.feature.conversation.ObserveConversationDetailsUseCase
+import com.wire.kalium.logic.feature.incallreaction.SendInCallReactionUseCase
+import com.wire.kalium.logic.functional.Either
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.verify
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.amshove.kluent.internal.assertEquals
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -94,6 +109,15 @@ class SharedCallingViewModelTest {
     private lateinit var observeSpeaker: ObserveSpeakerUseCase
 
     @MockK
+    lateinit var observeInCallReactionsUseCase: ObserveInCallReactionsUseCase
+
+    @MockK
+    lateinit var sendInCallReactionUseCase: SendInCallReactionUseCase
+
+    @MockK
+    lateinit var getCurrentClientId: ObserveCurrentClientIdUseCase
+
+    @MockK
     private lateinit var callRinger: CallRinger
 
     @MockK
@@ -111,12 +135,17 @@ class SharedCallingViewModelTest {
 
     private lateinit var sharedCallingViewModel: SharedCallingViewModel
 
+    val reactionsFlow = MutableSharedFlow<InCallReactionMessage>()
+    val callFlow = MutableSharedFlow<Call?>()
+
     @BeforeEach
     fun setup() {
         MockKAnnotations.init(this)
-        coEvery { establishedCall.invoke(any()) } returns emptyFlow()
+        coEvery { establishedCall.invoke(any()) } returns callFlow
         coEvery { observeConversationDetails.invoke(any()) } returns emptyFlow()
         coEvery { observeSpeaker.invoke() } returns emptyFlow()
+        coEvery { observeInCallReactionsUseCase(any()) } returns reactionsFlow
+        coEvery { getCurrentClientId() } returns flowOf(ClientId("clientId"))
 
         sharedCallingViewModel = SharedCallingViewModel(
             conversationId = conversationId,
@@ -135,6 +164,9 @@ class SharedCallingViewModelTest {
             callRinger = callRinger,
             uiCallParticipantMapper = uiCallParticipantMapper,
             userTypeMapper = userTypeMapper,
+            observeInCallReactionsUseCase = observeInCallReactionsUseCase,
+            sendInCallReactionUseCase = sendInCallReactionUseCase,
+            getCurrentClientId = getCurrentClientId,
             dispatchers = TestDispatcherProvider()
         )
     }
@@ -310,6 +342,97 @@ class SharedCallingViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { setVideoPreview(any(), any()) }
+    }
+
+    @Test
+    fun givenAnOngoingCall_WhenInCallReactionIsReceived_ThenNewEmojiIsEmitted() = runTest {
+
+        sharedCallingViewModel.inCallReactions.test {
+
+            // when
+            reactionsFlow.emit(InCallReactionMessage(conversationId, TestUser.USER_ID, setOf("👍", "🎉")))
+
+            val reaction1 = awaitItem()
+            val reaction2 = awaitItem()
+
+            // then
+            assertEquals("👍", reaction1.emoji)
+            assertIs<ReactionSender.Unknown>(reaction1.sender)
+            assertEquals("🎉", reaction2.emoji)
+            assertIs<ReactionSender.Unknown>(reaction2.sender)
+        }
+    }
+
+    @Test
+    fun givenAnOngoingCall_WhenInCallReactionIsReceived_ThenNewRecentReactionEmitted() = runTest {
+
+        // when
+        reactionsFlow.emit(InCallReactionMessage(conversationId, TestUser.USER_ID, setOf("👍")))
+
+        val recentReaction = sharedCallingViewModel.recentReactions.getValue(TestUser.USER_ID)
+
+        // then
+        assertEquals("👍", recentReaction)
+    }
+
+    @Test
+    fun givenAnOngoingCall_WhenNewInCallReactionIsReceived_ThenRecentReactionUpdated() = runTest {
+
+        // when
+        reactionsFlow.emit(InCallReactionMessage(conversationId, TestUser.USER_ID, setOf("👍", "🎉")))
+
+        val recentReaction = sharedCallingViewModel.recentReactions.getValue(TestUser.USER_ID)
+
+        // then
+        assertEquals("🎉", recentReaction)
+    }
+
+    @Test
+    fun givenAnOngoingCall_WhenInCallReactionIsSent_ThenReactionMessageIsSent() = runTest {
+
+        // given
+        coEvery { sendInCallReactionUseCase(conversationId, any()) } returns Either.Right(Unit)
+
+        // when
+        sharedCallingViewModel.onReactionClick("👍")
+
+        // then
+        coVerify(exactly = 1) {
+            sendInCallReactionUseCase(OngoingCallViewModelTest.Companion.conversationId, "👍")
+        }
+    }
+
+    @Test
+    fun givenAnOngoingCall_WhenInCallReactionIsSent_ThenNewEmojiIsEmitted() = runTest {
+
+        // given
+        coEvery { sendInCallReactionUseCase(conversationId, any()) } returns Either.Right(Unit)
+
+        sharedCallingViewModel.inCallReactions.test {
+            // when
+            sharedCallingViewModel.onReactionClick("👍")
+
+            val reaction = awaitItem()
+
+            // then
+            assertEquals("👍", reaction.emoji)
+            assertIs<ReactionSender.You>(reaction.sender)
+        }
+    }
+
+    @Test
+    fun givenAnOngoingCall_WhenInCallReactionSentFails_ThenNoEmojiIsEmitted() = runTest {
+        // given
+        coEvery { sendInCallReactionUseCase(conversationId, any()) } returns
+                Either.Left(NetworkFailure.NoNetworkConnection(IllegalStateException()))
+
+        sharedCallingViewModel.inCallReactions.test {
+            // when
+            sharedCallingViewModel.onReactionClick("👍")
+
+            // then
+            expectNoEvents()
+        }
     }
 
     companion object {

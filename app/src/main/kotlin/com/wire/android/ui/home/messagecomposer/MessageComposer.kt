@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -47,7 +48,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.text.input.TextFieldValue
 import com.wire.android.R
 import com.wire.android.ui.common.TextWithLearnMore
 import com.wire.android.ui.common.banner.SecurityClassificationBannerForConversation
@@ -252,7 +252,7 @@ private fun BaseComposerPreview(
         )
     }
 
-    val messageTextFieldValue = remember { mutableStateOf(TextFieldValue()) }
+    val messageTextState = rememberTextFieldState()
 
     val messageComposition = remember { mutableStateOf(MessageComposition(ConversationId("value", "domain"))) }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -261,7 +261,7 @@ private fun BaseComposerPreview(
         mutableStateOf(
             MessageCompositionHolder(
                 messageComposition = messageComposition,
-                messageTextFieldValue = messageTextFieldValue,
+                messageTextState = messageTextState,
                 onClearDraft = {},
                 onSaveDraft = {},
                 onSearchMentionQueryChanged = {},
@@ -276,7 +276,7 @@ private fun BaseComposerPreview(
         messageComposerStateHolder = MessageComposerStateHolder(
             messageComposerViewState = messageComposerViewState,
             messageCompositionInputStateHolder = MessageCompositionInputStateHolder(
-                messageTextFieldValue = messageTextFieldValue,
+                messageTextState = messageTextState,
                 keyboardController = keyboardController,
                 focusRequester = focusRequester
             ),

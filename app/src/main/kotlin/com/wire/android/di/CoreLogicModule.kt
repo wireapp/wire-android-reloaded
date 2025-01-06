@@ -498,6 +498,12 @@ class UseCaseModule {
     fun provideMigrateFromPersonalToTeamUseCase(
         @KaliumCoreLogic coreLogic: CoreLogic,
         @CurrentAccount currentAccount: UserId
-    ) =
-        coreLogic.getSessionScope(currentAccount).migrateFromPersonalToTeam
+    ) = coreLogic.getSessionScope(currentAccount).migrateFromPersonalToTeam
+
+    @ViewModelScoped
+    @Provides
+    fun provideGetTeamUrlUseCase(
+        @KaliumCoreLogic coreLogic: CoreLogic,
+        @CurrentAccount currentAccount: UserId
+    ) = coreLogic.getSessionScope(currentAccount).getTeamUrlUseCase
 }

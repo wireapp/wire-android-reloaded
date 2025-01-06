@@ -22,9 +22,14 @@ package com.wire.android.ui.calling.ongoing.participantsview
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,6 +61,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
@@ -74,11 +80,13 @@ import com.wire.android.R
 import com.wire.android.model.NameBasedAvatar
 import com.wire.android.model.UserAvatarData
 import com.wire.android.ui.calling.model.UICallParticipant
+import com.wire.android.ui.calling.ongoing.incallreactions.InCallReactions
 import com.wire.android.ui.common.avatar.UserProfileAvatar
 import com.wire.android.ui.common.avatar.UserProfileAvatarType
 import com.wire.android.ui.common.colorsScheme
 import com.wire.android.ui.common.darkColorsScheme
 import com.wire.android.ui.common.dimensions
+import com.wire.android.ui.common.typography
 import com.wire.android.ui.home.conversationslist.model.Membership
 import com.wire.android.ui.theme.WireTheme
 import com.wire.android.ui.theme.wireTypography
@@ -88,16 +96,18 @@ import com.wire.kalium.logic.data.id.QualifiedID
 @Composable
 fun ParticipantTile(
     participantTitleState: UICallParticipant,
-    isSelfUser: Boolean,
     isSelfUserMuted: Boolean,
     isSelfUserCameraOn: Boolean,
     onSelfUserVideoPreviewCreated: (view: View) -> Unit,
+    isOnFrontCamera: Boolean,
+    flipCamera: () -> Unit,
     modifier: Modifier = Modifier,
     isOnPiPMode: Boolean = false,
     shouldFillSelfUserCameraPreview: Boolean = false,
     shouldFillOthersVideoPreview: Boolean = true,
     isZoomingEnabled: Boolean = false,
-    onClearSelfUserVideoPreview: () -> Unit
+    recentReaction: String? = null,
+    onClearSelfUserVideoPreview: () -> Unit,
 ) {
     val alpha =
         if (participantTitleState.hasEstablishedAudio) ContentAlpha.high else ContentAlpha.medium
@@ -107,8 +117,9 @@ fun ParticipantTile(
         color = darkColorsScheme().surfaceContainer,
         shape = RoundedCornerShape(if (participantTitleState.isSpeaking) dimensions().corner8x else dimensions().corner3x),
     ) {
+
         ConstraintLayout {
-            val (avatar, bottomRow) = createRefs()
+            val (avatar, bottomRow, cameraButton) = createRefs()
             val maxAvatarSize = dimensions().onGoingCallUserAvatarSize
             val activeSpeakerBorderPadding = dimensions().spacing6x
 
@@ -136,7 +147,7 @@ fun ParticipantTile(
                 isOnPiPMode = isOnPiPMode
             )
 
-            if (isSelfUser) {
+            if (participantTitleState.isSelfUser) {
                 CameraPreview(
                     isCameraOn = isSelfUserCameraOn,
                     shouldFill = shouldFillSelfUserCameraPreview,
@@ -157,7 +168,6 @@ fun ParticipantTile(
             if (!isOnPiPMode) {
                 BottomRow(
                     participantTitleState = participantTitleState,
-                    isSelfUser = isSelfUser,
                     isSelfUserMuted = isSelfUserMuted,
                     modifier = Modifier
                         .padding(
@@ -171,6 +181,42 @@ fun ParticipantTile(
                             start.linkTo(parent.start)
                             end.linkTo(parent.end)
                         }
+                )
+            }
+
+            AnimatedVisibility(
+                modifier = Modifier
+                    .padding(dimensions().spacing12x),
+                visible = recentReaction != null,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(dimensions().inCallReactionRecentReactionSize)
+                        .background(
+                            color = colorsScheme().emojiBackgroundColor,
+                            shape = RoundedCornerShape(dimensions().corner6x)
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = recentReaction ?: "",
+                        textAlign = TextAlign.Center,
+                        style = typography().inCallReactionRecentEmoji,
+                    )
+                }
+            }
+
+            if (participantTitleState.isSelfUser && isSelfUserCameraOn) {
+                FlipCameraButton(
+                    modifier = Modifier
+                        .constrainAs(cameraButton) {
+                            top.linkTo(parent.top)
+                            end.linkTo(parent.end)
+                        },
+                    isOnFrontCamera = isOnFrontCamera,
+                    flipCamera = flipCamera,
                 )
             }
         }
@@ -196,7 +242,6 @@ private val activeSpeakerBorderModifier
 @Composable
 private fun BottomRow(
     participantTitleState: UICallParticipant,
-    isSelfUser: Boolean,
     isSelfUserMuted: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -208,7 +253,7 @@ private fun BottomRow(
                 modifier = Modifier
                     .padding(end = dimensions().spacing8x)
                     .layoutId("muteIcon"),
-                isMuted = if (isSelfUser) isSelfUserMuted else participantTitleState.isMuted,
+                isMuted = if (participantTitleState.isSelfUser) isSelfUserMuted else participantTitleState.isMuted,
                 hasEstablishedAudio = participantTitleState.hasEstablishedAudio
             )
             UsernameTile(
@@ -464,12 +509,16 @@ private fun PreviewParticipantTile(
     isSpeaking: Boolean = false,
     hasEstablishedAudio: Boolean = true,
     shape: PreviewTileShape = PreviewTileShape.Wide,
+    recentReaction: String? = null,
+    isSelfUser: Boolean = false,
+    isSelfCameraOn: Boolean = false,
 ) {
     ParticipantTile(
         modifier = Modifier.size(width = shape.width, height = shape.height),
         participantTitleState = UICallParticipant(
             id = QualifiedID("", ""),
             clientId = "client-id",
+            isSelfUser = isSelfUser,
             name = if (longName) "long user name to be displayed in participant tile during a call" else "user name",
             isMuted = isMuted,
             isSpeaking = isSpeaking,
@@ -482,9 +531,11 @@ private fun PreviewParticipantTile(
         ),
         onClearSelfUserVideoPreview = {},
         onSelfUserVideoPreviewCreated = {},
-        isSelfUser = false,
         isSelfUserMuted = false,
-        isSelfUserCameraOn = false
+        isSelfUserCameraOn = isSelfCameraOn,
+        recentReaction = recentReaction,
+        isOnFrontCamera = false,
+        flipCamera = { },
     )
 }
 
@@ -568,4 +619,25 @@ fun PreviewParticipantTallLongNameTalking() = WireTheme {
 @Composable
 fun PreviewParticipantWideLongNameTalking() = WireTheme {
     PreviewParticipantTile(shape = PreviewTileShape.Wide, isSpeaking = true)
+}
+
+@PreviewMultipleThemes
+@Composable
+fun PreviewParticipantTalkingReaction() = WireTheme {
+    PreviewParticipantTile(
+        shape = PreviewTileShape.Regular,
+        isSpeaking = true,
+        recentReaction = InCallReactions.defaultReactions[2],
+    )
+}
+
+@PreviewMultipleThemes
+@Composable
+fun PreviewParticipantCameraButton() = WireTheme {
+    PreviewParticipantTile(
+        shape = PreviewTileShape.Regular,
+        recentReaction = InCallReactions.defaultReactions[2],
+        isSelfUser = true,
+        isSelfCameraOn = true,
+    )
 }

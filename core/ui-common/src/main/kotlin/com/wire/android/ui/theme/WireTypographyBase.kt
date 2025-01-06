@@ -148,4 +148,10 @@ object WireTypographyBase {
         lineHeight = 28.13.sp,
         textAlign = TextAlign.Center
     )
+    val InCallEmoji = TextStyle(
+        fontSize = 32.sp,
+    )
+    val InCallEmojiRecent = TextStyle(
+        fontSize = 20.sp,
+    )
 }

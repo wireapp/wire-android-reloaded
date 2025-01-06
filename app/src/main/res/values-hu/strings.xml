@@ -233,6 +233,7 @@
     <string name="content_description_self_profile_team">Csapatnév, %s</string>
     <string name="content_description_self_profile_change_status">elérhetőségi állapot megváltoztatása</string>
     <string name="content_description_self_profile_new_account_btn">Hozzon létre új csapatot vagy személyes fiókot vagy jelentkezzen be</string>
+    <string name="content_description_self_profile_manage_team_btn">Csapat kezelése</string>
     <string name="content_description_change_picture_back_btn">Vissza a saját profil áttekintéséhez</string>
     <string name="content_description_welcome_screen_close_btn">Az új csapat létrehozása és bejelentkezés lap bezárása</string>
     <string name="content_description_login_back_btn">Vissza az új csapat létrehozása és bejelentkezés lapra</string>
@@ -574,6 +575,7 @@
     <string name="user_profile_status_away">Nincs a gépnél</string>
     <string name="user_profile_status_none">Semmi</string>
     <string name="user_profile_new_account_text">Új csapat, vagy fiók hozzáadása</string>
+    <string name="user_profile_account_management">Csapat kezelése</string>
     <string name="user_profile_details_tab">Részletek</string>
     <string name="user_profile_devices_tab">Eszközök</string>
     <string name="user_profile_group_tab">Csoport</string>
@@ -628,8 +630,10 @@
     <string name="label_filter_conversations">Beszélgetések szűrése</string>
     <string name="label_filter_all">Az összes beszélgetés</string>
     <string name="label_filter_favorites">Kedvencek</string>
+    <string name="label_filter_folders">Mappák</string>
     <string name="label_filter_group">Csoportok</string>
     <string name="label_filter_one_on_one">Kétszemélyes beszélgetések</string>
+    <string name="label_folders">Mappák</string>
     <!-- Muting options BottomSheet -->
     <string name="muting_option_all_allowed_title">Minden</string>
     <string name="muting_option_all_allowed_text">Értesítsen ezen beszélgetéssel kapcsolatban mindenről (hang- és videóhívásokat is beleértve)</string>
@@ -940,6 +944,14 @@
     <string name="calling_ongoing_double_tap_to_go_back">Visszalépéshez koppintson duplán</string>
     <string name="calling_feature_unavailable_title_alert">Ez a funkció nem érhető el</string>
     <string name="calling_feature_unavailable_message_alert">Konferenciahívás kezdeményezése lehetőség csak a Wire fizetős verziójában elérhető.</string>
+    <string name="calling_feature_unavailable_team_member_message_alert">Konferenciahívás indításához a csapatának Vállalati szintű előfizetésre kell váltania.</string>
+    <string name="calling_feature_unavailable_team_admin_title_alert">Vállalati szintre váltás</string>
+    <string name="calling_feature_unavailable_team_admin_message_alert">A csapata jelenleg az ingyenes Alap csomagot használja. Lépjen Vállalati szintre, hogy hozzáférjenek olyan lehetőségekhez, mint egyebek közt a konferenciahívás indítása.</string>
+    <string name="calling_feature_unavailable_team_admin_message_link_alert">Tudjon meg többet a Wire árairól</string>
+    <string name="calling_feature_unavailable_team_admin_upgrade_action_alert">Váltás magasabb csomagra</string>
+    <string name="calling_feature_enabled_title_alert">Wire Vállalati szint</string>
+    <string name="calling_feature_enabled_message_alert">Csapata Vállalati szintre lépett, ami hozzáférést biztosít olyan lehetőségekhez, mint egyebek közt a konferenciahívások.</string>
+    <string name="calling_feature_enabled_message_link_alert">Tudjon meg többet a Wire Vállalati szintről</string>
     <string name="calling_screen_connecting_until_call_established">Csatlakozás…</string>
     <string name="calling_confirm_start_call_title_dialog">Hívás indítása</string>
     <string name="calling_confirm_start_call_description_dialog">Biztosan hívni akarja ő(ke)t: %1$s?</string>
@@ -1134,6 +1146,8 @@ Ez a beállítás az összes beszélgetésre érvényes ezen az eszközön.</str
     <string name="custom_backend_dialog_body_backend_website">Honlap URL:</string>
     <string name="custom_backend_dialog_body_backend_websocket">Kiszolgáló WSURL:</string>
     <string name="custom_backend_error_title">Hiba történt</string>
+    <string name="custom_backend_error_no_internet_connection_body">A helyi kiszolgálóra történő átirányítás nem volt lehetséges, úgy tűnik, nem kapcsolódik az internethez.\n\nKapcsolódjon az internetre, és próbálja meg újra.</string>
+    <string name="custom_backend_error_no_internet_connection_try_again">Próbálja meg újra</string>
     <string name="label_fetching_your_messages">Új üzenetek lekérdezése</string>
     <string name="label_text_copied">Szöveg a vágólapra másolva</string>
     <string name="label_logs_option_title">Naplók</string>
@@ -1163,6 +1177,8 @@ Ez a beállítás az összes beszélgetésre érvényes ezen az eszközön.</str
     <string name="group_empty_list_description">Ön még nem résztvevője csoportos beszélgetésnek.\nKezdjen el egyet!</string>
     <string name="one_on_one_empty_list_description">Önnek még nincsenek partnerei.\nKeressen személyeket %1$s tartományában és kapcsolódjon velük.</string>
     <string name="favorites_empty_list_how_to_label">Hogyan jelölhet meg kedvencként beszélgetéseket</string>
+    <string name="folders_empty_list_description">A rendezettség érdekében helyezze beszélgetéseit mappákba.</string>
+    <string name="folders_empty_list_how_to_add">Hogyan helyezzen egy beszélgetést egy mappába</string>
     <string name="conversation_empty_list_title">Üdvözöljük 👋</string>
     <string name="label_no_conversation_found">Nem található beszélgetés.</string>
     <string name="label_connect_with_new_users">Lépjen kapcsolatba új felhasználókkal, vagy kezdjen új beszélgetésbe</string>
@@ -1559,7 +1575,7 @@ Kérjük, próbálja meg újra.</string>
     <string name="personal_to_team_migration_team_plan_larger_meetings_details">Szervezzen videókonferenciákat akár 150 résztvevővel.</string>
     <string name="personal_to_team_migration_team_plan_availability_status_label">Elérhetőségi állapot:</string>
     <string name="personal_to_team_migration_team_plan_availability_status_details">Tudassa csapatával, hogy elérhető, elfoglalt vagy távol van.</string>
-    <string name="personal_to_team_migration_team_plan_upgrade_to_enterprise_label">Vállalati szintre lépés:</string>
+    <string name="personal_to_team_migration_team_plan_upgrade_to_enterprise_label">Vállalati szintre váltás:</string>
     <string name="personal_to_team_migration_team_plan_upgrade_to_enterprise_description">Jusson további funkciókhoz és kiemelt támogatáshoz.</string>
     <string name="personal_to_team_migration_team_plan_learn_more_about_wire_plan">Tudjon meg többet a Wire csomagjairól</string>
     <string name="personal_to_team_migration_team_name_step">Csapat neve</string>

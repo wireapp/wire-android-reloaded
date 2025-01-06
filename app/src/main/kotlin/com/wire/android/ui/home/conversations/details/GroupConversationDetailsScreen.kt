@@ -489,7 +489,8 @@ private fun GroupConversationDetailsContent(
                 blockUser = {},
                 unblockUser = {},
                 leaveGroup = leaveGroupDialogState::show,
-                deleteGroup = deleteGroupDialogState::show
+                deleteGroup = deleteGroupDialogState::show,
+                deleteGroupLocally = {}
             )
         }
     )
@@ -609,7 +610,8 @@ fun PreviewGroupConversationDetails() {
                 mlsVerificationStatus = Conversation.VerificationStatus.VERIFIED,
                 isUnderLegalHold = false,
                 proteusVerificationStatus = Conversation.VerificationStatus.VERIFIED,
-                isFavorite = false
+                isFavorite = false,
+                isDeletingConversationLocallyRunning = false
             ),
             bottomSheetEventsHandler = GroupConversationDetailsBottomSheetEventsHandler.PREVIEW,
             onBackPressed = {},

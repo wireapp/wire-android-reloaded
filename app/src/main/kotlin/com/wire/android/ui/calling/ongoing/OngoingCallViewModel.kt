@@ -47,7 +47,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 @HiltViewModel(assistedFactory = OngoingCallViewModel.Factory::class)
 class OngoingCallViewModel @AssistedInject constructor(
     @Assisted

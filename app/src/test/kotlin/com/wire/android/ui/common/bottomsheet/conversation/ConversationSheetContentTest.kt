@@ -156,6 +156,43 @@ class ConversationSheetContentTest {
         assertFalse(canEditNotifications)
     }
 
+    @Test
+    fun givenGroupConversation_whenMemberOfTheConversation_thenDeleteConversationLocallyIsNotVisible() = runTest {
+        // given
+        val conversationSheetContent = createGroupSheetContent("Title")
+
+        // when
+        val canDeleteGroupLocally = conversationSheetContent.canDeleteGroupLocally()
+
+        // then
+        assertFalse(canDeleteGroupLocally)
+    }
+
+    @Test
+    fun givenGroupConversation_whenNotMemberOfTheConversation_thenDeleteConversationLocallyIsVisible() = runTest {
+        // given
+        val conversationSheetContent = createGroupSheetContent(title = "Title", selfRole = null)
+
+        // when
+        val canDeleteGroupLocally = conversationSheetContent.canDeleteGroupLocally()
+
+        // then
+        assertTrue(canDeleteGroupLocally)
+    }
+
+    @Test
+    fun givenGroupConversation_whenNotMemberOfTheConversationAndDeletionRunning_thenDeleteConversationLocallyIsNotVisible() = runTest {
+        // given
+        val conversationSheetContent =
+            createGroupSheetContent(title = "Title", selfRole = null, conversationDeletionLocallyRunning = true)
+
+        // when
+        val canDeleteGroupLocally = conversationSheetContent.canDeleteGroupLocally()
+
+        // then
+        assertFalse(canDeleteGroupLocally)
+    }
+
     private fun createPrivateSheetContent(
         blockingState: BlockingState,
         isUserDeleted: Boolean
@@ -178,12 +215,15 @@ class ConversationSheetContentTest {
             mlsVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             isUnderLegalHold = false,
-            isFavorite = false
+            isFavorite = false,
+            isDeletingConversationLocallyRunning = false
         )
     }
 
     private fun createGroupSheetContent(
-        title: String
+        title: String,
+        selfRole: Conversation.Member.Role? = Conversation.Member.Role.Member,
+        conversationDeletionLocallyRunning: Boolean = false,
     ): ConversationSheetContent {
         val details = testGroup.copy(conversation = testGroup.conversation.copy(teamId = TeamId("team_id")))
 
@@ -192,14 +232,15 @@ class ConversationSheetContentTest {
             conversationId = details.conversation.id,
             mutingConversationState = details.conversation.mutedStatus,
             conversationTypeDetail = ConversationTypeDetail.Group(details.conversation.id, false),
-            selfRole = Conversation.Member.Role.Member,
+            selfRole = selfRole,
             isTeamConversation = details.conversation.isTeamGroup(),
             isArchived = false,
             protocol = Conversation.ProtocolInfo.Proteus,
             mlsVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             isUnderLegalHold = false,
-            isFavorite = false
+            isFavorite = false,
+            isDeletingConversationLocallyRunning = conversationDeletionLocallyRunning
         )
     }
 }

@@ -36,7 +36,8 @@ import javax.inject.Inject
 @ViewModelScoped
 class RecordAudioMessagePlayer @Inject constructor(
     private val context: Context,
-    private val audioMediaPlayer: MediaPlayer
+    private val audioMediaPlayer: MediaPlayer,
+    private val wavesMaskHelper: AudioWavesMaskHelper
 ) {
     private var currentAudioFile: File? = null
     private var audioState: AudioState = AudioState.DEFAULT
@@ -110,6 +111,12 @@ class RecordAudioMessagePlayer @Inject constructor(
                         )
                     )
                 }
+
+                is RecordAudioMediaPlayerStateUpdate.WaveMaskUpdate -> {
+                    audioState = audioState.copy(
+                        wavesMask = audioStateUpdate.waveMask
+                    )
+                }
             }
 
             audioState
@@ -165,6 +172,12 @@ class RecordAudioMessagePlayer @Inject constructor(
         audioMediaPlayer.start()
 
         audioMessageStateUpdate.emit(
+            RecordAudioMediaPlayerStateUpdate.WaveMaskUpdate(
+                wavesMaskHelper.getWaveMask(audioFile)
+            )
+        )
+
+        audioMessageStateUpdate.emit(
             RecordAudioMediaPlayerStateUpdate.RecordAudioMediaPlayingStateUpdate(
                 audioMediaPlayingState = AudioMediaPlayingState.Playing
             )
@@ -217,6 +230,6 @@ class RecordAudioMessagePlayer @Inject constructor(
     }
 
     private companion object {
-        const val UPDATE_POSITION_INTERVAL_IN_MS = 1000L
+        const val UPDATE_POSITION_INTERVAL_IN_MS = 100L
     }
 }

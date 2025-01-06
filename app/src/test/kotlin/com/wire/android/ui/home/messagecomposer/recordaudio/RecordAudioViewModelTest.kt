@@ -24,6 +24,7 @@ import com.wire.android.config.TestDispatcherProvider
 import com.wire.android.datastore.GlobalDataStore
 import com.wire.android.framework.FakeKaliumFileSystem
 import com.wire.android.media.audiomessage.AudioState
+import com.wire.android.media.audiomessage.AudioWavesMaskHelper
 import com.wire.android.media.audiomessage.RecordAudioMessagePlayer
 import com.wire.android.ui.home.messagecomposer.recordaudio.RecordAudioViewModelTest.Arrangement.Companion.ASSET_SIZE_LIMIT
 import com.wire.android.util.CurrentScreen
@@ -45,9 +46,11 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import okio.Path
 import org.amshove.kluent.internal.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.io.File
 
 @ExtendWith(CoroutineTestExtension::class)
 class RecordAudioViewModelTest {
@@ -356,6 +359,7 @@ class RecordAudioViewModelTest {
         val context = mockk<Context>()
         val dispatchers = TestDispatcherProvider()
         val fakeKaliumFileSystem = FakeKaliumFileSystem()
+        val audioWavesMaskHelper = mockk<AudioWavesMaskHelper>()
 
         val viewModel by lazy {
             RecordAudioViewModel(
@@ -368,6 +372,7 @@ class RecordAudioViewModelTest {
                 generateAudioFileWithEffects = generateAudioFileWithEffects,
                 globalDataStore = globalDataStore,
                 dispatchers = dispatchers,
+                audioWavesMaskHelper = audioWavesMaskHelper,
                 kaliumFileSystem = fakeKaliumFileSystem
             )
         }
@@ -401,6 +406,9 @@ class RecordAudioViewModelTest {
             coEvery { recordAudioMessagePlayer.close() } returns Unit
 
             coEvery { observeEstablishedCalls() } returns flowOf(listOf())
+
+            every { audioWavesMaskHelper.getWaveMask(any<File>()) } returns listOf()
+            every { audioWavesMaskHelper.getWaveMask(any<Path>()) } returns listOf()
         }
 
         fun withEstablishedCall() = apply {

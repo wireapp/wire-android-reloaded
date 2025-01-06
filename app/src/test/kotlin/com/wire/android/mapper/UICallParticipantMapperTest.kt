@@ -19,6 +19,7 @@
 package com.wire.android.mapper
 
 import com.wire.kalium.logic.data.call.Participant
+import com.wire.kalium.logic.data.conversation.ClientId
 import com.wire.kalium.logic.data.id.QualifiedID
 import io.mockk.MockKAnnotations
 import kotlinx.coroutines.test.runTest
@@ -42,12 +43,37 @@ class UICallParticipantMapperTest {
             accentId = -1
         )
         // When
-        val result = mapper.toUICallParticipant(item)
+        val result = mapper.toUICallParticipant(item, ClientId("clientId"))
         // Then
         assert(
             result.id == item.id && result.clientId == item.clientId && result.name == item.name && result.isMuted == item.isMuted
                     && result.isSpeaking == item.isSpeaking && result.avatar?.userAssetId == item.avatarAssetId
-                    && result.isCameraOn == item.isCameraOn
+                    && result.isCameraOn == item.isCameraOn && result.isSelfUser == true
+        )
+    }
+
+    @Test
+    fun givenParticipant_whenMappingToUICallParticipant_thenCorrectValuesShouldBeReturnedForNonSelfUser() = runTest {
+        val (_, mapper) = Arrangement().arrange()
+        // Given
+        val item = Participant(
+            id = QualifiedID("value", "domain"),
+            clientId = "clientId",
+            name = "name",
+            isMuted = false,
+            isCameraOn = false,
+            isSpeaking = false,
+            isSharingScreen = false,
+            hasEstablishedAudio = true,
+            accentId = -1
+        )
+        // When
+        val result = mapper.toUICallParticipant(item, ClientId("otherClientId"))
+        // Then
+        assert(
+            result.id == item.id && result.clientId == item.clientId && result.name == item.name && result.isMuted == item.isMuted
+                    && result.isSpeaking == item.isSpeaking && result.avatar?.userAssetId == item.avatarAssetId
+                    && result.isCameraOn == item.isCameraOn && result.isSelfUser == false
         )
     }
 

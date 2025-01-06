@@ -78,11 +78,14 @@ fun TeamMigrationConfirmationStepScreen(
     val state = teamMigrationViewModel.teamMigrationState
 
     TeamMigrationConfirmationStepScreenContent(
+        isMigrating = state.isMigrating,
         onContinueButtonClicked = {
+            teamMigrationViewModel.setIsMigratingState(true)
             teamMigrationViewModel.migrateFromPersonalToTeamAccount(
                 onSuccess = {
+                    teamMigrationViewModel.setIsMigratingState(false)
                     navigator.navigate(TeamMigrationDoneStepScreenDestination)
-                },
+                }
             )
         },
         onBackPressed = {
@@ -179,6 +182,7 @@ private fun ErrorDialog(
 @Composable
 private fun TeamMigrationConfirmationStepScreenContent(
     modifier: Modifier = Modifier,
+    isMigrating: Boolean = false,
     onContinueButtonClicked: () -> Unit = { },
     onBackPressed: () -> Unit = { }
 ) {
@@ -254,6 +258,7 @@ private fun TeamMigrationConfirmationStepScreenContent(
         }
         val isContinueButtonEnabled = agreedToMigrationTerms.value && acceptedWireTermsOfUse.value
         BottomLineButtons(
+            isMigrating = isMigrating,
             isContinueButtonEnabled = isContinueButtonEnabled,
             onContinue = onContinueButtonClicked,
             backButtonContentDescription = stringResource(R.string.personal_to_team_migration_back_button_confirmation_content_description),

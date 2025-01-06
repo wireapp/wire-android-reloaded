@@ -21,14 +21,16 @@ package com.wire.android.mapper
 import com.wire.android.model.ImageAsset
 import com.wire.android.ui.calling.model.UICallParticipant
 import com.wire.kalium.logic.data.call.Participant
+import com.wire.kalium.logic.data.conversation.ClientId
 import javax.inject.Inject
 
 class UICallParticipantMapper @Inject constructor(
     private val userTypeMapper: UserTypeMapper,
 ) {
-    fun toUICallParticipant(participant: Participant) = UICallParticipant(
+    fun toUICallParticipant(participant: Participant, currentClientId: ClientId) = UICallParticipant(
         id = participant.id,
         clientId = participant.clientId,
+        isSelfUser = participant.clientId == currentClientId.value,
         name = participant.name,
         isMuted = participant.isMuted,
         isSpeaking = participant.isSpeaking,

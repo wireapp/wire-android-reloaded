@@ -21,6 +21,11 @@ package com.wire.android.ui.calling.ongoing
 import android.content.pm.PackageManager
 import android.view.View
 import androidx.activity.compose.BackHandler
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -32,7 +37,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetValue
@@ -53,6 +57,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.app.PictureInPictureModeChangedInfo
+import androidx.core.util.Consumer
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -65,14 +71,20 @@ import com.wire.android.ui.calling.CallState
 import com.wire.android.ui.calling.ConversationName
 import com.wire.android.ui.calling.SharedCallingViewModel
 import com.wire.android.ui.calling.controlbuttons.CameraButton
-import com.wire.android.ui.calling.controlbuttons.CameraFlipButton
-import com.wire.android.ui.calling.controlbuttons.HangUpButton
+import com.wire.android.ui.calling.controlbuttons.HangUpOngoingButton
+import com.wire.android.ui.calling.controlbuttons.InCallReactionsButton
 import com.wire.android.ui.calling.controlbuttons.MicrophoneButton
 import com.wire.android.ui.calling.controlbuttons.SpeakerButton
+import com.wire.android.ui.calling.model.InCallReaction
 import com.wire.android.ui.calling.model.UICallParticipant
 import com.wire.android.ui.calling.ongoing.fullscreen.DoubleTapToast
 import com.wire.android.ui.calling.ongoing.fullscreen.FullScreenTile
 import com.wire.android.ui.calling.ongoing.fullscreen.SelectedParticipant
+import com.wire.android.ui.calling.ongoing.incallreactions.AnimatableReaction
+import com.wire.android.ui.calling.ongoing.incallreactions.InCallReactionsPanel
+import com.wire.android.ui.calling.ongoing.incallreactions.InCallReactionsState
+import com.wire.android.ui.calling.ongoing.incallreactions.drawInCallReactions
+import com.wire.android.ui.calling.ongoing.incallreactions.rememberInCallReactionsState
 import com.wire.android.ui.calling.ongoing.participantsview.FloatingSelfUserTile
 import com.wire.android.ui.calling.ongoing.participantsview.VerticalCallingPager
 import com.wire.android.ui.common.ConversationVerificationIcons
@@ -85,11 +97,11 @@ import com.wire.android.ui.common.progress.WireCircularProgressIndicator
 import com.wire.android.ui.common.topappbar.NavigationIconType
 import com.wire.android.ui.common.topappbar.WireCenterAlignedTopAppBar
 import com.wire.android.ui.common.visbility.rememberVisibilityState
+import com.wire.android.ui.emoji.EmojiPickerBottomSheet
 import com.wire.android.ui.home.conversations.PermissionPermanentlyDeniedDialogState
 import com.wire.android.ui.home.conversationslist.model.Membership
 import com.wire.android.ui.theme.WireTheme
 import com.wire.android.ui.theme.wireColorScheme
-import com.wire.android.ui.theme.wireDimensions
 import com.wire.android.ui.theme.wireTypography
 import com.wire.android.util.ui.PreviewMultipleThemes
 import com.wire.kalium.logic.data.call.CallStatus
@@ -100,6 +112,7 @@ import com.wire.kalium.logic.data.user.UserId
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.flow.collectLatest
 import java.util.Locale
 
 @Suppress("ParameterWrapping")
@@ -118,10 +131,16 @@ fun OngoingCallScreen(
     val permissionPermanentlyDeniedDialogState =
         rememberVisibilityState<PermissionPermanentlyDeniedDialogState>()
 
-    val activity = LocalActivity.current
-    val isPiPAvailableOnThisDevice =
-        activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+    val inCallReactionsState = rememberInCallReactionsState()
+
+    val activity = LocalActivity.current as AppCompatActivity
+    val isPiPAvailableOnThisDevice = activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
     val shouldUsePiPMode = BuildConfig.PICTURE_IN_PICTURE_ENABLED && isPiPAvailableOnThisDevice
+    var inPictureInPictureMode by remember { mutableStateOf(shouldUsePiPMode && activity.isInPictureInPictureMode) }
+
+    if (shouldUsePiPMode) {
+        activity.observePictureInPictureMode { inPictureInPictureMode = it }
+    }
 
     LaunchedEffect(ongoingCallViewModel.state.flowState) {
         when (ongoingCallViewModel.state.flowState) {
@@ -133,6 +152,13 @@ fun OngoingCallScreen(
             }
         }
     }
+
+    LaunchedEffect(Unit) {
+        sharedCallingViewModel.inCallReactions.collectLatest { reaction ->
+            inCallReactionsState.runAnimation(reaction)
+        }
+    }
+
     val hangUpCall = remember {
         {
             sharedCallingViewModel.hangUpCall { activity.finishAndRemoveTask() }
@@ -164,9 +190,9 @@ fun OngoingCallScreen(
         }
     }
 
-    val inPictureInPictureMode = activity.isInPictureInPictureMode
     OngoingCallContent(
         callState = sharedCallingViewModel.callState,
+        inCallReactionsState = inCallReactionsState,
         shouldShowDoubleTapToast = ongoingCallViewModel.shouldShowDoubleTapToast,
         toggleSpeaker = sharedCallingViewModel::toggleSpeaker,
         toggleMute = sharedCallingViewModel::toggleMute,
@@ -181,9 +207,10 @@ fun OngoingCallScreen(
         selectedParticipantForFullScreen = ongoingCallViewModel.selectedParticipant,
         hideDoubleTapToast = ongoingCallViewModel::hideDoubleTapToast,
         onCameraPermissionPermanentlyDenied = onCameraPermissionPermanentlyDenied,
+        onReactionClick = sharedCallingViewModel::onReactionClick,
         participants = sharedCallingViewModel.participantsState,
         inPictureInPictureMode = inPictureInPictureMode,
-        currentUserId = ongoingCallViewModel.currentUserId,
+        recentReactions = sharedCallingViewModel.recentReactions,
     )
 
     BackHandler {
@@ -279,6 +306,7 @@ private fun HandleSendingVideoFeed(
 @Composable
 private fun OngoingCallContent(
     callState: CallState,
+    inCallReactionsState: InCallReactionsState,
     shouldShowDoubleTapToast: Boolean,
     toggleSpeaker: () -> Unit,
     toggleMute: () -> Unit,
@@ -290,12 +318,13 @@ private fun OngoingCallContent(
     onCollapse: () -> Unit,
     hideDoubleTapToast: () -> Unit,
     onCameraPermissionPermanentlyDenied: () -> Unit,
+    onReactionClick: (String) -> Unit,
     requestVideoStreams: (participants: List<UICallParticipant>) -> Unit,
     onSelectedParticipant: (selectedParticipant: SelectedParticipant) -> Unit,
     selectedParticipantForFullScreen: SelectedParticipant,
     participants: PersistentList<UICallParticipant>,
+    recentReactions: Map<UserId, String>,
     inPictureInPictureMode: Boolean,
-    currentUserId: UserId,
 ) {
     val sheetInitialValue = SheetValue.PartiallyExpanded
     val sheetState = rememberStandardBottomSheetState(
@@ -307,6 +336,9 @@ private fun OngoingCallContent(
     )
 
     var shouldOpenFullScreen by remember { mutableStateOf(false) }
+
+    var showInCallReactionsPanel by remember { mutableStateOf(false) }
+    var showEmojiPicker by remember { mutableStateOf(false) }
 
     WireBottomSheetScaffold(
         sheetDragHandle = null,
@@ -336,19 +368,22 @@ private fun OngoingCallContent(
                     conversationId = callState.conversationId,
                     isMuted = callState.isMuted ?: true,
                     isCameraOn = callState.isCameraOn,
-                    isOnFrontCamera = callState.isOnFrontCamera,
                     isSpeakerOn = callState.isSpeakerOn,
+                    isShowingCallReactions = showInCallReactionsPanel,
                     toggleSpeaker = toggleSpeaker,
                     toggleMute = toggleMute,
                     onHangUpCall = hangUpCall,
                     onToggleVideo = toggleVideo,
-                    flipCamera = flipCamera,
+                    onCallReactionsClick = {
+                        showInCallReactionsPanel = !showInCallReactionsPanel
+                    },
                     onCameraPermissionPermanentlyDenied = onCameraPermissionPermanentlyDenied
                 )
             }
         },
+        sheetContainerColor = colorsScheme().background,
     ) {
-        BoxWithConstraints(
+        Column(
             modifier = Modifier
                 .padding(
                     top = it.calculateTopPadding(),
@@ -356,96 +391,135 @@ private fun OngoingCallContent(
                 )
         ) {
 
-            if (participants.isEmpty()) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    WireCircularProgressIndicator(
-                        progressColor = MaterialTheme.wireColorScheme.onSurface,
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                        size = dimensions().spacing32x
-                    )
-                    Text(
-                        text = stringResource(id = R.string.calling_screen_connecting_until_call_established),
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                    )
-                }
-            } else {
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                ) {
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+            ) {
 
-                    // if there is only one in the call, do not allow full screen
-                    if (participants.size == 1) {
-                        shouldOpenFullScreen = false
-                    }
-
-                    // if we are on full screen, and that user left the call, then we leave the full screen
-                    if (participants.find { user -> user.id == selectedParticipantForFullScreen.userId } == null) {
-                        shouldOpenFullScreen = false
-                    }
-
-                    if (shouldOpenFullScreen) {
-                        hideDoubleTapToast()
-                        FullScreenTile(
-                            callState = callState,
-                            selectedParticipant = selectedParticipantForFullScreen,
-                            height = this@BoxWithConstraints.maxHeight - dimensions().spacing4x,
-                            closeFullScreen = {
-                                onSelectedParticipant(SelectedParticipant())
-                                shouldOpenFullScreen = !shouldOpenFullScreen
-                            },
-                            onBackButtonClicked = {
-                                onSelectedParticipant(SelectedParticipant())
-                                shouldOpenFullScreen = !shouldOpenFullScreen
-                            },
-                            requestVideoStreams = requestVideoStreams,
-                            setVideoPreview = setVideoPreview,
-                            clearVideoPreview = clearVideoPreview,
-                            participants = participants
+                if (participants.isEmpty()) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        WireCircularProgressIndicator(
+                            progressColor = MaterialTheme.wireColorScheme.onSurface,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            size = dimensions().spacing32x
                         )
-                    } else {
-                        VerticalCallingPager(
-                            participants = participants,
-                            isSelfUserCameraOn = callState.isCameraOn,
-                            isSelfUserMuted = callState.isMuted ?: true,
-                            isInPictureInPictureMode = inPictureInPictureMode,
-                            contentHeight = this@BoxWithConstraints.maxHeight,
-                            onSelfVideoPreviewCreated = setVideoPreview,
-                            onSelfClearVideoPreview = clearVideoPreview,
-                            requestVideoStreams = requestVideoStreams,
-                            currentUserId = currentUserId,
-                            onDoubleTap = { selectedParticipant ->
-                                onSelectedParticipant(selectedParticipant)
-                                shouldOpenFullScreen = !shouldOpenFullScreen
-                            },
-                        )
-                        DoubleTapToast(
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            enabled = shouldShowDoubleTapToast,
-                            text = stringResource(id = R.string.calling_ongoing_double_tap_for_full_screen),
-                            onTap = hideDoubleTapToast
+                        Text(
+                            text = stringResource(id = R.string.calling_screen_connecting_until_call_established),
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
                         )
                     }
-                    if (BuildConfig.PICTURE_IN_PICTURE_ENABLED && participants.size > 1) {
-                        val selfUser =
-                            participants.first { participant ->
-                                // API returns only id.value, without domain, till this get changed compare only id.value
-                                participant.id.equalsIgnoringBlankDomain(currentUserId)
-                            }
-                        FloatingSelfUserTile(
-                            modifier = Modifier.align(Alignment.TopEnd),
-                            contentHeight = this@BoxWithConstraints.maxHeight,
-                            contentWidth = this@BoxWithConstraints.maxWidth,
-                            participant = selfUser,
-                            onSelfUserVideoPreviewCreated = setVideoPreview,
-                            onClearSelfUserVideoPreview = clearVideoPreview
-                        )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .drawInCallReactions(state = inCallReactionsState)
+                    ) {
+
+                        // if there is only one in the call, do not allow full screen
+                        if (participants.size == 1) {
+                            shouldOpenFullScreen = false
+                        }
+
+                        // if we are on full screen, and that user left the call, then we leave the full screen
+                        if (participants.find { user -> user.id == selectedParticipantForFullScreen.userId } == null) {
+                            shouldOpenFullScreen = false
+                        }
+
+                        if (shouldOpenFullScreen) {
+                            hideDoubleTapToast()
+                            FullScreenTile(
+                                callState = callState,
+                                selectedParticipant = selectedParticipantForFullScreen,
+                                height = this@BoxWithConstraints.maxHeight - dimensions().spacing4x,
+                                closeFullScreen = {
+                                    onSelectedParticipant(SelectedParticipant())
+                                    shouldOpenFullScreen = !shouldOpenFullScreen
+                                },
+                                onBackButtonClicked = {
+                                    onSelectedParticipant(SelectedParticipant())
+                                    shouldOpenFullScreen = !shouldOpenFullScreen
+                                },
+                                requestVideoStreams = requestVideoStreams,
+                                setVideoPreview = setVideoPreview,
+                                clearVideoPreview = clearVideoPreview,
+                                participants = participants,
+                                isOnFrontCamera = callState.isOnFrontCamera,
+                                flipCamera = flipCamera,
+                            )
+                        } else {
+                            VerticalCallingPager(
+                                participants = participants,
+                                isSelfUserCameraOn = callState.isCameraOn,
+                                isSelfUserMuted = callState.isMuted ?: true,
+                                isInPictureInPictureMode = inPictureInPictureMode,
+                                isOnFrontCamera = callState.isOnFrontCamera,
+                                contentHeight = this@BoxWithConstraints.maxHeight,
+                                onSelfVideoPreviewCreated = setVideoPreview,
+                                onSelfClearVideoPreview = clearVideoPreview,
+                                requestVideoStreams = requestVideoStreams,
+                                recentReactions = recentReactions,
+                                onDoubleTap = { selectedParticipant ->
+                                    onSelectedParticipant(selectedParticipant)
+                                    shouldOpenFullScreen = !shouldOpenFullScreen
+                                },
+                                flipCamera = flipCamera,
+                            )
+                            DoubleTapToast(
+                                modifier = Modifier.align(Alignment.TopCenter),
+                                enabled = shouldShowDoubleTapToast,
+                                text = stringResource(id = R.string.calling_ongoing_double_tap_for_full_screen),
+                                onTap = hideDoubleTapToast
+                            )
+                        }
+                        if (BuildConfig.PICTURE_IN_PICTURE_ENABLED && participants.size > 1) {
+                            val selfUser = participants.first { it.isSelfUser }
+                            FloatingSelfUserTile(
+                                modifier = Modifier.align(Alignment.TopEnd),
+                                contentHeight = this@BoxWithConstraints.maxHeight,
+                                contentWidth = this@BoxWithConstraints.maxWidth,
+                                participant = selfUser,
+                                isOnFrontCamera = callState.isOnFrontCamera,
+                                onSelfUserVideoPreviewCreated = setVideoPreview,
+                                onClearSelfUserVideoPreview = clearVideoPreview,
+                                flipCamera = flipCamera,
+                            )
+                        }
                     }
                 }
             }
+
+            AnimatedContent(
+                targetState = showInCallReactionsPanel,
+                transitionSpec = {
+                    val enter = slideInVertically(initialOffsetY = { it })
+                    val exit = slideOutVertically(targetOffsetY = { it })
+                    enter.togetherWith(exit)
+                },
+                label = "InCallReactions"
+            ) { show ->
+                if (show) {
+                    InCallReactionsPanel(
+                        onReactionClick = onReactionClick,
+                        onMoreClick = { showEmojiPicker = true }
+                    )
+                }
+            }
+
+            EmojiPickerBottomSheet(
+                isVisible = showEmojiPicker,
+                onEmojiSelected = {
+                    showEmojiPicker = false
+                    onReactionClick(it)
+                },
+                onDismiss = {
+                    showEmojiPicker = false
+                },
+            )
         }
     }
 }
@@ -508,12 +582,12 @@ private fun CallingControls(
     isMuted: Boolean,
     isCameraOn: Boolean,
     isSpeakerOn: Boolean,
-    isOnFrontCamera: Boolean,
+    isShowingCallReactions: Boolean,
     toggleSpeaker: () -> Unit,
     toggleMute: () -> Unit,
     onHangUpCall: () -> Unit,
     onToggleVideo: () -> Unit,
-    flipCamera: () -> Unit,
+    onCallReactionsClick: () -> Unit,
     onCameraPermissionPermanentlyDenied: () -> Unit
 ) {
     Column(
@@ -527,7 +601,10 @@ private fun CallingControls(
                 .fillMaxWidth()
                 .height(dimensions().spacing56x)
         ) {
-            MicrophoneButton(isMuted = isMuted, onMicrophoneButtonClicked = toggleMute)
+            MicrophoneButton(
+                isMuted = isMuted,
+                onMicrophoneButtonClicked = toggleMute
+            )
             CameraButton(
                 isCameraOn = isCameraOn,
                 onPermissionPermanentlyDenied = onCameraPermissionPermanentlyDenied,
@@ -539,15 +616,12 @@ private fun CallingControls(
                 onSpeakerButtonClicked = toggleSpeaker
             )
 
-            if (isCameraOn) {
-                CameraFlipButton(
-                    isOnFrontCamera = isOnFrontCamera,
-                    onCameraFlipButtonClicked = flipCamera
-                )
-            }
+            InCallReactionsButton(
+                isSelected = isShowingCallReactions,
+                onInCallReactionsClick = onCallReactionsClick
+            )
 
-            HangUpButton(
-                modifier = Modifier.size(MaterialTheme.wireDimensions.defaultCallingControlsSize),
+            HangUpOngoingButton(
                 onHangUpButtonClicked = onHangUpCall
             )
         }
@@ -556,6 +630,24 @@ private fun CallingControls(
     }
 }
 
+@Composable
+private fun AppCompatActivity.observePictureInPictureMode(onChanged: (Boolean) -> Unit) {
+    DisposableEffect(Unit) {
+        val consumer = object : Consumer<PictureInPictureModeChangedInfo> {
+            override fun accept(info: PictureInPictureModeChangedInfo) {
+                onChanged(info.isInPictureInPictureMode)
+            }
+        }
+
+        addOnPictureInPictureModeChangedListener(consumer)
+
+        onDispose {
+            removeOnPictureInPictureModeChangedListener(consumer)
+        }
+    }
+}
+
+@Suppress("EmptyFunctionBlock")
 @Composable
 fun PreviewOngoingCallContent(participants: PersistentList<UICallParticipant>) {
     OngoingCallContent(
@@ -571,6 +663,10 @@ fun PreviewOngoingCallContent(participants: PersistentList<UICallParticipant>) {
             mlsVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
         ),
+        inCallReactionsState = object : InCallReactionsState {
+            override fun runAnimation(inCallReaction: InCallReaction) {}
+            override fun getReactions(): List<AnimatableReaction> = emptyList()
+        },
         shouldShowDoubleTapToast = false,
         toggleSpeaker = {},
         toggleMute = {},
@@ -582,12 +678,13 @@ fun PreviewOngoingCallContent(participants: PersistentList<UICallParticipant>) {
         onCollapse = {},
         hideDoubleTapToast = {},
         onCameraPermissionPermanentlyDenied = {},
+        onReactionClick = {},
         requestVideoStreams = {},
         participants = participants,
         inPictureInPictureMode = false,
-        currentUserId = UserId("userId", "domain"),
         onSelectedParticipant = {},
         selectedParticipantForFullScreen = SelectedParticipant(),
+        recentReactions = emptyMap(),
     )
 }
 
@@ -621,6 +718,7 @@ fun buildPreviewParticipantsList(count: Int = 10) = buildList {
             UICallParticipant(
                 id = QualifiedID("id_$index", ""),
                 clientId = "client_id_$index",
+                isSelfUser = false,
                 name = "Participant $index",
                 isSpeaking = index % 3 == 1,
                 isMuted = index % 3 == 2,

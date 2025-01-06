@@ -110,7 +110,7 @@ fun WirePasswordTextField(
         modifier = modifier.then(autoFillModifier(autoFillType, textState::setTextAndPlaceCursorAtEnd)),
         testTag = testTag,
         onTap = onTap,
-        innerBasicTextField = { decorator, textFieldModifier, _ ->
+        innerBasicTextField = { decorator, textFieldModifier ->
             BasicSecureTextField(
                 state = textState,
                 textStyle = textStyle.copy(color = colors.textColor(state = state).value, textDirection = TextDirection.ContentOrLtr),

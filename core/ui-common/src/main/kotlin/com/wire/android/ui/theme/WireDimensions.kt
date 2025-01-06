@@ -107,6 +107,8 @@ data class WireDimensions(
     val badgeSmallMinSize: DpSize,
     val badgeSmallMinClickableSize: DpSize,
     val onMoreOptionsButtonCornerRadius: Dp,
+    val inCallReactionButtonSize: Dp,
+    val inCallReactionRecentReactionSize: Dp,
     // Dialog
     val dialogButtonsSpacing: Dp,
     val dialogTextsSpacing: Dp,
@@ -183,6 +185,8 @@ data class WireDimensions(
     val groupButtonHeight: Dp,
     // Calling
     val defaultCallingControlsSize: Dp,
+    val defaultCallingControlsHeight: Dp,
+    val defaultCallingControlsWidth: Dp,
     val defaultCallingControlsIconSize: Dp,
     val bigCallingControlsSize: Dp,
     val bigCallingHangUpButtonIconSize: Dp,
@@ -341,11 +345,13 @@ private val DefaultPhonePortraitWireDimensions: WireDimensions = WireDimensions(
     systemMessageIconLargeSize = 18.dp,
     groupButtonHeight = 82.dp,
     defaultCallingControlsSize = 56.dp,
+    defaultCallingControlsHeight = 40.dp,
+    defaultCallingControlsWidth = 56.dp,
     defaultCallingControlsIconSize = 20.dp,
     bigCallingControlsSize = 72.dp,
     bigCallingHangUpButtonIconSize = 32.dp,
     bigCallingAcceptButtonIconSize = 24.dp,
-    defaultSheetPeekHeight = 100.dp,
+    defaultSheetPeekHeight = 72.dp,
     defaultOutgoingCallSheetPeekHeight = 281.dp,
     onGoingCallUserAvatarSize = 72.dp,
     onGoingCallTileUsernameMaxWidth = 120.dp,
@@ -356,10 +362,12 @@ private val DefaultPhonePortraitWireDimensions: WireDimensions = WireDimensions(
     messageItemHorizontalPadding = 12.dp,
     conversationOptionsItemMinHeight = 57.dp,
     ongoingCallLabelHeight = 28.dp,
-    audioMessageHeight = 48.dp,
+    audioMessageHeight = 68.dp,
     importedMediaAssetSize = 120.dp,
     typingIndicatorHeight = 24.dp,
     legalHoldBannerMinHeight = 26.dp,
+    inCallReactionButtonSize = 48.dp,
+    inCallReactionRecentReactionSize = 32.dp,
 )
 
 private val DefaultPhoneLandscapeWireDimensions: WireDimensions = DefaultPhonePortraitWireDimensions

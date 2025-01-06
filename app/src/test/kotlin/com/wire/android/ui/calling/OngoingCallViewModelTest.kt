@@ -21,6 +21,7 @@ package com.wire.android.ui.calling
 import com.wire.android.config.CoroutineTestExtension
 import com.wire.android.config.NavigationTestExtension
 import com.wire.android.datastore.GlobalDataStore
+import com.wire.android.ui.calling.OngoingCallViewModelTest.Arrangement
 import com.wire.android.ui.calling.model.UICallParticipant
 import com.wire.android.ui.calling.ongoing.OngoingCallViewModel
 import com.wire.android.ui.calling.ongoing.fullscreen.SelectedParticipant
@@ -302,6 +303,7 @@ class OngoingCallViewModelTest {
         private val participant1 = UICallParticipant(
             id = QualifiedID("value1", "domain"),
             clientId = "client-id1",
+            isSelfUser = false,
             name = "name1",
             isMuted = false,
             isSpeaking = false,
@@ -314,6 +316,7 @@ class OngoingCallViewModelTest {
         private val participant2 = UICallParticipant(
             id = QualifiedID("value2", "domain"),
             clientId = "client-id2",
+            isSelfUser = false,
             name = "name2",
             isMuted = false,
             isSpeaking = false,
@@ -326,6 +329,7 @@ class OngoingCallViewModelTest {
         private val participant3 = UICallParticipant(
             id = QualifiedID("value3", "domain"),
             clientId = "client-id3",
+            isSelfUser = false,
             name = "name3",
             isMuted = false,
             isSpeaking = false,

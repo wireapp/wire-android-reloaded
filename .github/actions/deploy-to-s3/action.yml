@@ -40,8 +40,8 @@ runs:
         aws-bucket: ${{ inputs.aws-bucket }}
         destination-dir: "megazord/android/reloaded/${{ inputs.build-flavour }}/${{ inputs.build-variant }}/PR-${{ github.event.pull_request.number }}/"
         file-path: ${{ steps.path.outputs.apk_full_path }}
-        output-file-url: 'true'
-        public: true
+        output-file-url: 'false'
+        public: false
     - name: Upload to S3 from branch
       if: github.event.pull_request.number == ''
       id: upload-from-branch
@@ -53,8 +53,8 @@ runs:
         aws-bucket: ${{ inputs.aws-bucket }}
         destination-dir: "megazord/android/reloaded/${{ inputs.build-flavour }}/${{ inputs.build-variant }}/"
         file-path: ${{ steps.path.outputs.apk_full_path }}
-        output-file-url: 'true'
-        public: true
+        output-file-url: 'false'
+        public: false
     - name: Show URL
       if: github.event.pull_request.number != ''
       shell: bash

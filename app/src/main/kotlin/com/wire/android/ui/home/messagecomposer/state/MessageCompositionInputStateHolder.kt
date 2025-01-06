@@ -18,8 +18,8 @@
 package com.wire.android.ui.home.messagecomposer.state
 
 import androidx.annotation.VisibleForTesting
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -30,7 +30,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -43,7 +42,7 @@ import com.wire.android.util.isNotMarkdownBlank
 
 @Stable
 class MessageCompositionInputStateHolder(
-    val messageTextFieldValue: MutableState<TextFieldValue>,
+    val messageTextState: TextFieldState,
     private val keyboardController: SoftwareKeyboardController?,
     val focusRequester: FocusRequester
 ) {
@@ -65,12 +64,12 @@ class MessageCompositionInputStateHolder(
     val inputType: InputType by derivedStateOf {
         when (val state = compositionState) {
             is CompositionState.Composing -> InputType.Composing(
-                isSendButtonEnabled = messageTextFieldValue.value.text.isNotMarkdownBlank()
+                isSendButtonEnabled = messageTextState.text.isNotMarkdownBlank()
             )
 
             is CompositionState.Editing -> InputType.Editing(
-                isEditButtonEnabled = messageTextFieldValue.value.text != state.originalMessageText &&
-                        messageTextFieldValue.value.text.isNotMarkdownBlank()
+                isEditButtonEnabled = messageTextState.text != state.originalMessageText &&
+                        messageTextState.text.isNotMarkdownBlank()
             )
         }
     }
@@ -146,7 +145,7 @@ class MessageCompositionInputStateHolder(
     }
 
     fun calculateOptionsMenuHeight(additionalOptionsSubMenuState: AdditionalOptionSubMenuState): Dp {
-        return max(optionsHeight, 250.dp) + if (additionalOptionsSubMenuState != AdditionalOptionSubMenuState.RecordAudio) {
+        return max(optionsHeight, 200.dp) + if (additionalOptionsSubMenuState != AdditionalOptionSubMenuState.RecordAudio) {
             0.dp
         } else {
             composeTextHeight
@@ -172,7 +171,7 @@ class MessageCompositionInputStateHolder(
         val composeTextHeight = 128.dp
 
         fun saver(
-            messageTextFieldValue: MutableState<TextFieldValue>,
+            messageTextState: TextFieldState,
             keyboardController: SoftwareKeyboardController?,
             focusRequester: FocusRequester,
             density: Density
@@ -190,7 +189,7 @@ class MessageCompositionInputStateHolder(
             restore = { savedState ->
                 with(density) {
                     MessageCompositionInputStateHolder(
-                        messageTextFieldValue = messageTextFieldValue,
+                        messageTextState = messageTextState,
                         keyboardController = keyboardController,
                         focusRequester = focusRequester
                     ).apply {

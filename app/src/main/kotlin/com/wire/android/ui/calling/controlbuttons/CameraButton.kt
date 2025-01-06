@@ -20,10 +20,8 @@ package com.wire.android.ui.calling.controlbuttons
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
 import com.wire.android.R
 import com.wire.android.appLogger
-import com.wire.android.ui.common.dimensions
 import com.wire.android.ui.theme.WireTheme
 import com.wire.android.util.permission.rememberCameraPermissionFlow
 import com.wire.android.util.ui.PreviewMultipleThemes
@@ -34,7 +32,6 @@ fun CameraButton(
     onPermissionPermanentlyDenied: () -> Unit,
     modifier: Modifier = Modifier,
     isCameraOn: Boolean = false,
-    size: Dp = dimensions().defaultCallingControlsSize,
 ) {
     val cameraPermissionCheck = rememberCameraPermissionFlow(
         onPermissionGranted = {
@@ -56,7 +53,6 @@ fun CameraButton(
             false -> R.string.content_description_calling_turn_camera_on
         },
         onClick = cameraPermissionCheck::launch,
-        size = size,
         modifier = modifier,
     )
 }

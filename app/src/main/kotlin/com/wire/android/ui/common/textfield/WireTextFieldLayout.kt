@@ -111,21 +111,6 @@ internal fun WireTextFieldLayout(
                     onTap = onTap,
                 )
             },
-            decorationBox = { innerTextField ->
-                InnerTextLayout(
-                    innerTextField = innerTextField,
-                    shouldShowPlaceholder = shouldShowPlaceholder,
-                    leadingIcon = leadingIcon,
-                    trailingIcon = trailingIcon,
-                    placeholderText = placeholderText,
-                    style = state,
-                    placeholderTextStyle = placeholderTextStyle,
-                    placeholderAlignment = placeholderAlignment,
-                    inputMinHeight = inputMinHeight,
-                    colors = colors,
-                    onTap = onTap,
-                )
-            },
             textFieldModifier = Modifier
                 .fillMaxWidth()
                 .background(color = colors.backgroundColor(state).value, shape = shape)
@@ -233,9 +218,5 @@ private fun Alignment.Horizontal.toAlignment(): Alignment = Alignment { size, sp
 
 fun interface InnerBasicTextFieldBuilder {
     @Composable
-    fun Build(
-        decorator: TextFieldDecorator,
-        textFieldModifier: Modifier,
-        decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit
-    )
+    fun Build(decorator: TextFieldDecorator, textFieldModifier: Modifier)
 }

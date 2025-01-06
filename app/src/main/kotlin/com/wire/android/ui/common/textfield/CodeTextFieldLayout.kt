@@ -104,8 +104,7 @@ internal fun CodeTextFieldLayout(
                     }
                 }
             },
-            textFieldModifier = Modifier,
-            decorationBox = {}
+            textFieldModifier = Modifier
         )
         val bottomText = when {
             state is WireTextFieldState.Error && state.errorText != null -> state.errorText

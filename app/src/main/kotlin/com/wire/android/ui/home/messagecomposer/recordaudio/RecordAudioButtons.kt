@@ -200,6 +200,7 @@ fun RecordAudioButtonSend(
                     audioMediaPlayingState = audioState.audioMediaPlayingState,
                     totalTimeInMs = audioState.totalTimeInMs,
                     currentPositionInMs = audioState.currentPositionInMs,
+                    waveMask = audioState.wavesMask,
                     onPlayButtonClick = onPlayAudio,
                     onSliderPositionChange = { position ->
                         onSliderPositionChange(position.toInt())
@@ -230,7 +231,7 @@ private fun RecordAudioButton(
     isAudioFilterEnabled: Boolean = true,
     loading: Boolean = false,
     trailingIconAlignment: IconAlignment = IconAlignment.Border,
-    ) {
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -323,7 +324,8 @@ fun PreviewRecordAudioButtonSend() {
             audioState = AudioState(
                 audioMediaPlayingState = AudioMediaPlayingState.Paused,
                 totalTimeInMs = AudioState.TotalTimeInMs.Known(1000),
-                currentPositionInMs = 0
+                currentPositionInMs = 0,
+                wavesMask = listOf(32, 1, 24, 23, 13, 16, 9, 0, 4, 30, 23)
             ),
             onClick = {},
             modifier = Modifier,

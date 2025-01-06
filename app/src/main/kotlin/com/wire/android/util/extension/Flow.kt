@@ -19,7 +19,10 @@
 package com.wire.android.util.extension
 
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.withIndex
 
 fun intervalFlow(periodMs: Long, initialDelayMs: Long = 0L, stopWhen: () -> Boolean = { false }) =
     flow {
@@ -28,4 +31,10 @@ fun intervalFlow(periodMs: Long, initialDelayMs: Long = 0L, stopWhen: () -> Bool
             emit(Unit)
             delay(periodMs)
         }
+    }
+
+fun <T> Flow<T>.withDelayAfterFirst(timeMillis: Long): Flow<T> = withIndex()
+    .map { (index, value) ->
+        if (index > 0) delay(timeMillis)
+        value
     }

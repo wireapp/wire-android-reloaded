@@ -417,7 +417,8 @@ class OtherUserProfileScreenViewModel @Inject constructor(
                     mlsVerificationStatus = conversation.mlsVerificationStatus,
                     proteusVerificationStatus = conversation.proteusVerificationStatus,
                     isUnderLegalHold = conversation.legalHoldStatus.showLegalHoldIndicator(),
-                    isFavorite = null
+                    isFavorite = null,
+                    isDeletingConversationLocallyRunning = false
                 )
             }
         )

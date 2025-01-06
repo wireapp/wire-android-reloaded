@@ -1,0 +1,30 @@
+<!--
+  ~ Wire
+  ~ Copyright (C) 2024 Wire Swiss GmbH
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program. If not, see http://www.gnu.org/licenses/.
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="20"
+    android:viewportHeight="20">
+  <group>
+    <clip-path
+        android:pathData="M0,0h20v20h-20z"/>
+    <path
+        android:pathData="M10,19.375C7.766,19.375 5.789,18.672 4.07,17.266C2.352,15.859 1.266,14.063 0.813,11.875H2.734C3.172,13.531 4.063,14.883 5.406,15.93C6.75,16.977 8.281,17.5 10,17.5C11.344,17.5 12.594,17.168 13.75,16.504C14.906,15.84 15.813,14.922 16.469,13.75H13.75V11.875H19.375V17.5H17.5V15.625C16.609,16.813 15.508,17.734 14.195,18.391C12.883,19.047 11.484,19.375 10,19.375ZM10,12.813C9.219,12.813 8.555,12.539 8.008,11.992C7.461,11.445 7.188,10.781 7.188,10C7.188,9.219 7.461,8.555 8.008,8.008C8.555,7.461 9.219,7.188 10,7.188C10.781,7.188 11.445,7.461 11.992,8.008C12.539,8.555 12.813,9.219 12.813,10C12.813,10.781 12.539,11.445 11.992,11.992C11.445,12.539 10.781,12.813 10,12.813ZM0.625,8.125V2.5H2.5V4.375C3.391,3.188 4.492,2.266 5.805,1.609C7.117,0.953 8.516,0.625 10,0.625C12.234,0.625 14.211,1.328 15.93,2.734C17.648,4.141 18.734,5.938 19.188,8.125H17.266C16.828,6.469 15.938,5.117 14.594,4.07C13.25,3.023 11.719,2.5 10,2.5C8.656,2.5 7.406,2.832 6.25,3.496C5.094,4.16 4.188,5.078 3.531,6.25H6.25V8.125H0.625Z"
+        android:fillColor="#000000"/>
+  </group>
+</vector>

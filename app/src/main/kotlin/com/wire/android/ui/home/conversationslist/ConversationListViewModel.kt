@@ -27,6 +27,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.insertSeparators
 import androidx.paging.map
+import androidx.work.WorkManager
 import com.wire.android.BuildConfig
 import com.wire.android.appLogger
 import com.wire.android.di.CurrentAccount
@@ -47,6 +48,9 @@ import com.wire.android.ui.home.conversationslist.model.ConversationsSource
 import com.wire.android.ui.home.conversationslist.model.DialogState
 import com.wire.android.ui.home.conversationslist.model.GroupDialogState
 import com.wire.android.util.dispatchers.DispatcherProvider
+import com.wire.android.workmanager.worker.ConversationDeletionLocallyStatus
+import com.wire.android.workmanager.worker.enqueueConversationDeletionLocally
+import com.wire.android.workmanager.worker.observeConversationDeletionStatusLocally
 import com.wire.kalium.logic.data.conversation.Conversation
 import com.wire.kalium.logic.data.conversation.ConversationFilter
 import com.wire.kalium.logic.data.conversation.MutedConversationStatus
@@ -88,6 +92,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -109,6 +114,8 @@ interface ConversationListViewModel {
     fun blockUser(blockUserState: BlockUserDialogState) {}
     fun unblockUser(userId: UserId) {}
     fun deleteGroup(groupDialogState: GroupDialogState) {}
+    fun deleteGroupLocally(groupDialogState: GroupDialogState) {}
+    fun observeIsDeletingConversationLocally(conversationId: ConversationId): Flow<Boolean>
     fun leaveGroup(leaveGroupState: GroupDialogState) {}
     fun clearConversationContent(dialogState: DialogState) {}
     fun muteConversation(conversationId: ConversationId?, mutedConversationStatus: MutedConversationStatus) {}
@@ -120,6 +127,7 @@ class ConversationListViewModelPreview(
     foldersWithConversations: Flow<PagingData<ConversationFolderItem>> = previewConversationFoldersFlow(),
 ) : ConversationListViewModel {
     override val conversationListState = ConversationListState.Paginated(foldersWithConversations)
+    override fun observeIsDeletingConversationLocally(conversationId: ConversationId): Flow<Boolean> = flowOf(false)
 }
 
 @Suppress("MagicNumber", "TooManyFunctions", "LongParameterList")
@@ -142,7 +150,8 @@ class ConversationListViewModelImpl @AssistedInject constructor(
     private val observeLegalHoldStateForSelfUser: ObserveLegalHoldStateForSelfUserUseCase,
     @CurrentAccount val currentAccount: UserId,
     private val userTypeMapper: UserTypeMapper,
-    private val observeSelfUser: GetSelfUserUseCase
+    private val observeSelfUser: GetSelfUserUseCase,
+    private val workManager: WorkManager
 ) : ConversationListViewModel, ViewModel() {
 
     @AssistedFactory
@@ -365,6 +374,35 @@ class ConversationListViewModelImpl @AssistedInject constructor(
             }
             _requestInProgress = false
         }
+    }
+
+    override fun deleteGroupLocally(groupDialogState: GroupDialogState) {
+        viewModelScope.launch {
+            closeBottomSheet.emit(Unit)
+            workManager.enqueueConversationDeletionLocally(groupDialogState.conversationId)
+                .collect { status ->
+                    when (status) {
+                        ConversationDeletionLocallyStatus.SUCCEEDED -> {
+                            _infoMessage.emit(HomeSnackBarMessage.DeleteConversationGroupLocallySuccess(groupDialogState.conversationName))
+                        }
+
+                        ConversationDeletionLocallyStatus.FAILED -> {
+                            _infoMessage.emit(HomeSnackBarMessage.DeleteConversationGroupError)
+                        }
+
+                        ConversationDeletionLocallyStatus.RUNNING,
+                        ConversationDeletionLocallyStatus.IDLE -> {
+                            // nop
+                        }
+                    }
+                }
+        }
+    }
+
+    override fun observeIsDeletingConversationLocally(conversationId: ConversationId): Flow<Boolean> {
+        return workManager.observeConversationDeletionStatusLocally(conversationId)
+            .map { status -> status == ConversationDeletionLocallyStatus.RUNNING }
+            .distinctUntilChanged()
     }
 
     // TODO: needs to be implemented

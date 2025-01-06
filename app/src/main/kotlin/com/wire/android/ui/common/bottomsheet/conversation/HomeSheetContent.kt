@@ -67,6 +67,7 @@ internal fun ConversationMainSheetContent(
     unblockUserClick: (UnblockUserDialogState) -> Unit,
     leaveGroup: (GroupDialogState) -> Unit,
     deleteGroup: (GroupDialogState) -> Unit,
+    deleteGroupLocally: (GroupDialogState) -> Unit,
     navigateToNotification: () -> Unit
 ) {
     WireMenuModalSheetContent(
@@ -261,6 +262,28 @@ internal fun ConversationMainSheetContent(
                         title = stringResource(R.string.label_leave_group),
                         onItemClick = {
                             leaveGroup(
+                                GroupDialogState(
+                                    conversationSheetContent.conversationId,
+                                    conversationSheetContent.title
+                                )
+                            )
+                        }
+                    )
+                }
+            }
+            if (conversationSheetContent.canDeleteGroupLocally()) {
+                add {
+                    MenuBottomSheetItem(
+                        leading = {
+                            MenuItemIcon(
+                                id = R.drawable.ic_close,
+                                contentDescription = null
+                            )
+                        },
+                        title = stringResource(R.string.label_delete_group_locally),
+                        itemProvidedColor = MaterialTheme.colorScheme.error,
+                        onItemClick = {
+                            deleteGroupLocally(
                                 GroupDialogState(
                                     conversationSheetContent.conversationId,
                                     conversationSheetContent.title

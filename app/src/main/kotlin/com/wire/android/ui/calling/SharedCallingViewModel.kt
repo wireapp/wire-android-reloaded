@@ -20,6 +20,7 @@ package com.wire.android.ui.calling
 
 import android.view.View
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -29,26 +30,37 @@ import com.wire.android.mapper.UICallParticipantMapper
 import com.wire.android.mapper.UserTypeMapper
 import com.wire.android.media.CallRinger
 import com.wire.android.model.ImageAsset
+import com.wire.android.ui.calling.model.InCallReaction
+import com.wire.android.ui.calling.model.ReactionSender
 import com.wire.android.ui.calling.model.UICallParticipant
+import com.wire.android.ui.calling.ongoing.incallreactions.InCallReactions
+import com.wire.android.util.ExpiringMap
 import com.wire.android.util.dispatchers.DispatcherProvider
+import com.wire.android.util.extension.withDelayAfterFirst
 import com.wire.kalium.logic.data.call.Call
 import com.wire.kalium.logic.data.call.ConversationTypeForCall
 import com.wire.kalium.logic.data.call.VideoState
 import com.wire.kalium.logic.data.conversation.Conversation
 import com.wire.kalium.logic.data.conversation.ConversationDetails
 import com.wire.kalium.logic.data.id.ConversationId
+import com.wire.kalium.logic.data.id.QualifiedID
+import com.wire.kalium.logic.data.user.UserId
 import com.wire.kalium.logic.feature.call.usecase.EndCallUseCase
 import com.wire.kalium.logic.feature.call.usecase.FlipToBackCameraUseCase
 import com.wire.kalium.logic.feature.call.usecase.FlipToFrontCameraUseCase
 import com.wire.kalium.logic.feature.call.usecase.MuteCallUseCase
 import com.wire.kalium.logic.feature.call.usecase.ObserveEstablishedCallWithSortedParticipantsUseCase
+import com.wire.kalium.logic.feature.call.usecase.ObserveInCallReactionsUseCase
 import com.wire.kalium.logic.feature.call.usecase.ObserveSpeakerUseCase
 import com.wire.kalium.logic.feature.call.usecase.SetVideoPreviewUseCase
 import com.wire.kalium.logic.feature.call.usecase.TurnLoudSpeakerOffUseCase
 import com.wire.kalium.logic.feature.call.usecase.TurnLoudSpeakerOnUseCase
 import com.wire.kalium.logic.feature.call.usecase.UnMuteCallUseCase
 import com.wire.kalium.logic.feature.call.usecase.video.UpdateVideoStateUseCase
+import com.wire.kalium.logic.feature.client.ObserveCurrentClientIdUseCase
 import com.wire.kalium.logic.feature.conversation.ObserveConversationDetailsUseCase
+import com.wire.kalium.logic.feature.incallreaction.SendInCallReactionUseCase
+import com.wire.kalium.logic.functional.onSuccess
 import com.wire.kalium.logic.util.PlatformView
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -57,13 +69,19 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 
@@ -83,6 +101,9 @@ class SharedCallingViewModel @AssistedInject constructor(
     private val flipToFrontCamera: FlipToFrontCameraUseCase,
     private val flipToBackCamera: FlipToBackCameraUseCase,
     private val observeSpeaker: ObserveSpeakerUseCase,
+    private val observeInCallReactionsUseCase: ObserveInCallReactionsUseCase,
+    private val sendInCallReactionUseCase: SendInCallReactionUseCase,
+    private val getCurrentClientId: ObserveCurrentClientIdUseCase,
     private val callRinger: CallRinger,
     private val uiCallParticipantMapper: UICallParticipantMapper,
     private val userTypeMapper: UserTypeMapper,
@@ -92,6 +113,15 @@ class SharedCallingViewModel @AssistedInject constructor(
     var callState by mutableStateOf(CallState(conversationId))
 
     var participantsState by mutableStateOf(persistentListOf<UICallParticipant>())
+
+    private val _inCallReactions = Channel<InCallReaction>(
+        capacity = 300, // Max reactions to keep in queue
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+
+    val inCallReactions = _inCallReactions.receiveAsFlow().withDelayAfterFirst(InCallReactions.reactionsThrottleDelayMs)
+
+    val recentReactions = recentInCallReactionMap()
 
     init {
         viewModelScope.launch {
@@ -109,6 +139,9 @@ class SharedCallingViewModel @AssistedInject constructor(
             }
             launch {
                 observeOnSpeaker(this)
+            }
+            launch {
+                observeInCallReactions()
             }
         }
     }
@@ -172,18 +205,21 @@ class SharedCallingViewModel @AssistedInject constructor(
     }
 
     private suspend fun observeParticipants(sharedFlow: SharedFlow<Call?>) {
-        sharedFlow.collectLatest { call ->
-            call?.let {
-                callState = callState.copy(
-                    isMuted = it.isMuted,
-                    callStatus = it.status,
-                    isCameraOn = it.isCameraOn,
-                    isCbrEnabled = it.isCbrEnabled && call.conversationType == Conversation.Type.ONE_ON_ONE,
-                    callerName = it.callerName,
-                )
-                participantsState = call.participants.map { uiCallParticipantMapper.toUICallParticipant(it) }.toPersistentList()
-            }
-        }
+        combine(
+            getCurrentClientId().filterNotNull(),
+            sharedFlow.filterNotNull(),
+        ) { clientId, call ->
+            callState = callState.copy(
+                isMuted = call.isMuted,
+                callStatus = call.status,
+                isCameraOn = call.isCameraOn,
+                isCbrEnabled = call.isCbrEnabled && call.conversationType == Conversation.Type.ONE_ON_ONE,
+                callerName = call.callerName,
+            )
+            participantsState = call.participants.map {
+                uiCallParticipantMapper.toUICallParticipant(it, clientId)
+            }.toPersistentList()
+        }.collect()
     }
 
     fun hangUpCall(onCompleted: () -> Unit) {
@@ -279,8 +315,42 @@ class SharedCallingViewModel @AssistedInject constructor(
         }
     }
 
+    private suspend fun observeInCallReactions() {
+        observeInCallReactionsUseCase(conversationId).collect { message ->
+
+            val sender = participantsState.senderName(message.senderUserId)?.let { name ->
+                ReactionSender.Other(name)
+            } ?: ReactionSender.Unknown
+
+            message.emojis.forEach { emoji ->
+                _inCallReactions.send(InCallReaction(emoji, sender))
+            }
+
+            if (message.emojis.isNotEmpty()) {
+                recentReactions.put(message.senderUserId, message.emojis.last())
+            }
+        }
+    }
+
+    fun onReactionClick(emoji: String) {
+        viewModelScope.launch {
+            sendInCallReactionUseCase(conversationId, emoji).onSuccess {
+                _inCallReactions.send(InCallReaction(emoji, ReactionSender.You))
+            }
+        }
+    }
+
+    private fun recentInCallReactionMap(): MutableMap<UserId, String> =
+        ExpiringMap<UserId, String>(
+            scope = viewModelScope,
+            expiration = InCallReactions.recentReactionShowDurationMs,
+            delegate = mutableStateMapOf<UserId, String>()
+        )
+
     @AssistedFactory
     interface Factory {
         fun create(conversationId: ConversationId): SharedCallingViewModel
     }
 }
+
+private fun List<UICallParticipant>.senderName(userId: QualifiedID) = firstOrNull { it.id.value == userId.value }?.name

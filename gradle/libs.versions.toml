@@ -44,6 +44,7 @@ androidx-biometric = "1.1.0"
 androidx-startup = "1.2.0"
 androidx-compose-runtime = "1.7.2"
 compose-qr = "1.0.1"
+amplituda = "2.2.2"
 
 # Compose
 composeBom = "2024.11.00"
@@ -249,6 +250,8 @@ countly-sdk = { module = "ly.count.android:sdk", version.ref = "countly" }
 
 # QRs
 compose-qr-code = { module = "com.lightspark:compose-qr-code", version.ref = "compose-qr" }
+
+audio-amplituda = { module = "com.github.lincollincol:amplituda", version.ref = "amplituda" }
 
 # Dev tools
 aboutLibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "aboutLibraries" }

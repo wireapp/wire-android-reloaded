@@ -36,10 +36,12 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.wire.android.R
 import com.wire.android.media.audiomessage.AudioMediaPlayingState
+import com.wire.android.media.audiomessage.AudioSpeed
 import com.wire.android.media.audiomessage.AudioState
 import com.wire.android.ui.common.dimensions
 import com.wire.android.ui.common.progress.WireCircularProgressIndicator
 import com.wire.android.ui.home.conversations.info.ConversationDetailsData
+import com.wire.android.ui.home.conversations.messages.AudioMessagesState
 import com.wire.android.ui.home.conversations.messages.item.MessageClickActions
 import com.wire.android.ui.home.conversations.messages.item.MessageContainerItem
 import com.wire.android.ui.home.conversations.messages.item.SwipableMessageConfiguration
@@ -65,7 +67,7 @@ import kotlinx.datetime.Instant
 fun FileAssetsContent(
     groupedAssetMessageList: Flow<PagingData<UIPagingItem>>,
     assetStatuses: PersistentMap<String, MessageAssetStatus>,
-    audioMessagesState: PersistentMap<String, AudioState> = persistentMapOf(),
+    audioMessagesState: AudioMessagesState = AudioMessagesState(),
     onPlayAudioItemClicked: (messageId: String) -> Unit = {},
     onAudioItemPositionChanged: (String, Int) -> Unit = { _, _ -> },
     onAssetItemClicked: (messageId: String) -> Unit = {},
@@ -93,7 +95,7 @@ fun FileAssetsContent(
 @Composable
 private fun AssetMessagesListContent(
     groupedAssetMessageList: LazyPagingItems<UIPagingItem>,
-    audioMessagesState: PersistentMap<String, AudioState>,
+    audioMessagesState: AudioMessagesState,
     assetStatuses: PersistentMap<String, MessageAssetStatus>,
     onPlayAudioItemClicked: (messageId: String) -> Unit,
     onAudioItemPositionChanged: (String, Int) -> Unit,
@@ -137,7 +139,8 @@ private fun AssetMessagesListContent(
                             MessageContainerItem(
                                 message = message,
                                 conversationDetailsData = ConversationDetailsData.None(null),
-                                audioState = audioMessagesState[message.header.messageId],
+                                audioState = audioMessagesState.audioStates[message.header.messageId],
+                                audioSpeed = audioMessagesState.audioSpeed,
                                 assetStatus = assetStatuses[message.header.messageId]?.transferStatus,
                                 clickActions = MessageClickActions.Content(
                                     onFullMessageLongClicked = remember { { onItemLongClicked(it.header.messageId, it.isMyMessage) } },
@@ -171,7 +174,7 @@ private fun AssetMessagesListContent(
 @PreviewMultipleThemes
 @Composable
 fun PreviewFileAssetsEmptyContent() = WireTheme {
-    FileAssetsContent(groupedAssetMessageList = emptyFlow(), assetStatuses = persistentMapOf(), audioMessagesState = persistentMapOf())
+    FileAssetsContent(groupedAssetMessageList = emptyFlow(), assetStatuses = persistentMapOf())
 }
 
 @PreviewMultipleThemes
@@ -182,7 +185,7 @@ fun PreviewFileAssetsContent() = WireTheme {
 }
 
 @Suppress("MagicNumber")
-fun mockAssets(): Triple<Flow<PagingData<UIPagingItem>>, PersistentMap<String, MessageAssetStatus>, PersistentMap<String, AudioState>> {
+fun mockAssets(): Triple<Flow<PagingData<UIPagingItem>>, PersistentMap<String, MessageAssetStatus>, AudioMessagesState> {
     val msg1 = mockAssetMessage(assetId = "assset1", messageId = "msg1")
     val msg2 = mockAssetMessage(assetId = "assset2", messageId = "msg2")
     val msg3 = mockAssetMessage(assetId = "assset3", messageId = "msg3")
@@ -207,8 +210,8 @@ fun mockAssets(): Triple<Flow<PagingData<UIPagingItem>>, PersistentMap<String, M
         msg3.header.messageId to MessageAssetStatus(msg3.header.messageId, conversationId, AssetTransferStatus.DOWNLOAD_IN_PROGRESS)
     )
     val audioStatuses = persistentMapOf(
-        msg4.header.messageId to AudioState(AudioMediaPlayingState.Fetching, 0, AudioState.TotalTimeInMs.NotKnown),
-        msg5.header.messageId to AudioState(AudioMediaPlayingState.Playing, 20_000, AudioState.TotalTimeInMs.Known(60_000)),
+        msg4.header.messageId to AudioState(AudioMediaPlayingState.Fetching, 0, AudioState.TotalTimeInMs.NotKnown, listOf()),
+        msg5.header.messageId to AudioState(AudioMediaPlayingState.Playing, 20_000, AudioState.TotalTimeInMs.Known(60_000), listOf()),
     )
-    return Triple(flowOfAssets, assetsStatuses, audioStatuses)
+    return Triple(flowOfAssets, assetsStatuses, AudioMessagesState(audioStatuses, AudioSpeed.NORMAL))
 }

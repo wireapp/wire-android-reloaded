@@ -90,6 +90,8 @@ class DateAndTimeParsers private constructor() {
         private val messageTimeFormatter = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT, Locale.getDefault()).apply {
             this.timeZone = java.util.TimeZone.getDefault()
         }
+        private val audioMessageTimeFormat = DateTimeFormatter.ofPattern("mm:ss", Locale.getDefault())
+            .withZone(ZoneId.systemDefault())
 
         @Deprecated("Date String parsing is discouraged and will be removed soon for direct Instant/DateTime versions")
         fun serverDate(stringDate: String): Date? {
@@ -137,5 +139,7 @@ class DateAndTimeParsers private constructor() {
             } catch (e: Exception) {
                 null
             }
+
+        fun audioMessageTime(timeMs: Long): String = audioMessageTimeFormat.format(java.time.Instant.ofEpochMilli(timeMs))
     }
 }

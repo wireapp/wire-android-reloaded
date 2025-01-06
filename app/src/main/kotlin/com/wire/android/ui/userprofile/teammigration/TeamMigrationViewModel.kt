@@ -24,6 +24,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wire.android.feature.analytics.AnonymousAnalyticsManager
 import com.wire.android.feature.analytics.model.AnalyticsEvent
+import com.wire.kalium.logic.feature.server.GetTeamUrlUseCase
+import com.wire.kalium.logic.feature.user.GetSelfUserUseCase
 import com.wire.kalium.logic.feature.user.migration.MigrateFromPersonalToTeamFailure
 import com.wire.kalium.logic.feature.user.migration.MigrateFromPersonalToTeamResult
 import com.wire.kalium.logic.feature.user.migration.MigrateFromPersonalToTeamUseCase
@@ -34,11 +36,18 @@ import javax.inject.Inject
 @HiltViewModel
 class TeamMigrationViewModel @Inject constructor(
     private val anonymousAnalyticsManager: AnonymousAnalyticsManager,
-    private val migrateFromPersonalToTeam: MigrateFromPersonalToTeamUseCase
+    private val migrateFromPersonalToTeam: MigrateFromPersonalToTeamUseCase,
+    private val getSelfUser: GetSelfUserUseCase,
+    private val getTeamUrl: GetTeamUrlUseCase
 ) : ViewModel() {
 
     var teamMigrationState by mutableStateOf(TeamMigrationState())
         private set
+
+    init {
+        setUsername()
+        setTeamUrl()
+    }
 
     fun showMigrationLeaveDialog() {
         teamMigrationState = teamMigrationState.copy(shouldShowMigrationLeaveDialog = true)
@@ -92,10 +101,14 @@ class TeamMigrationViewModel @Inject constructor(
         )
     }
 
+    fun setIsMigratingState(isMigrating: Boolean) {
+        teamMigrationState = teamMigrationState.copy(isMigrating = isMigrating)
+    }
+
     fun migrateFromPersonalToTeamAccount(onSuccess: () -> Unit) {
         viewModelScope.launch {
             migrateFromPersonalToTeam.invoke(
-                teamMigrationState.teamNameTextState.text.toString(),
+                teamMigrationState.teamNameTextState.text.trim().toString(),
             ).let { result ->
                 when (result) {
                     is MigrateFromPersonalToTeamResult.Success -> {
@@ -116,5 +129,21 @@ class TeamMigrationViewModel @Inject constructor(
 
     private fun onMigrationFailure(failure: MigrateFromPersonalToTeamFailure) {
         teamMigrationState = teamMigrationState.copy(migrationFailure = failure)
+    }
+
+    private fun setUsername() {
+        viewModelScope.launch {
+            getSelfUser().collect { selfUser ->
+                selfUser.name?.let {
+                    teamMigrationState = teamMigrationState.copy(username = it)
+                }
+            }
+        }
+    }
+
+    private fun setTeamUrl() {
+        viewModelScope.launch {
+            teamMigrationState = teamMigrationState.copy(teamUrl = getTeamUrl())
+        }
     }
 }

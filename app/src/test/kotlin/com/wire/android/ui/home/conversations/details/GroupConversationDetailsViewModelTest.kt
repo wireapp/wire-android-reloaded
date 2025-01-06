@@ -452,7 +452,8 @@ class GroupConversationDetailsViewModelTest {
             mlsVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             isUnderLegalHold = true,
-            isFavorite = false
+            isFavorite = false,
+            isDeletingConversationLocallyRunning = false
         )
         // When - Then
         assertEquals(expected, viewModel.conversationSheetContent)

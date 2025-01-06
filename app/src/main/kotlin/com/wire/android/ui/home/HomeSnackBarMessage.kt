@@ -59,6 +59,12 @@ sealed class HomeSnackBarMessage(override val uiText: UIText) : SnackBarMessage 
             groupName
         )
     )
+    data class DeleteConversationGroupLocallySuccess(val groupName: String) : HomeSnackBarMessage(
+        UIText.StringResource(
+            R.string.conversation_group_removed_locally_success,
+            groupName
+        )
+    )
 
     data object DeleteConversationGroupError : HomeSnackBarMessage(UIText.StringResource(R.string.delete_group_conversation_error))
     data object LeftConversationSuccess : HomeSnackBarMessage(UIText.StringResource(R.string.left_conversation_group_success))

@@ -22,6 +22,8 @@ import com.wire.android.config.CoroutineTestExtension
 import com.wire.android.feature.analytics.AnonymousAnalyticsManager
 import com.wire.android.feature.analytics.model.AnalyticsEvent
 import com.wire.kalium.logic.NetworkFailure
+import com.wire.kalium.logic.feature.server.GetTeamUrlUseCase
+import com.wire.kalium.logic.feature.user.GetSelfUserUseCase
 import com.wire.kalium.logic.feature.user.migration.MigrateFromPersonalToTeamFailure
 import com.wire.kalium.logic.feature.user.migration.MigrateFromPersonalToTeamResult
 import com.wire.kalium.logic.feature.user.migration.MigrateFromPersonalToTeamUseCase
@@ -31,6 +33,7 @@ import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.internal.assertEquals
 import org.junit.jupiter.api.Assertions
@@ -243,6 +246,22 @@ class TeamMigrationViewModelTest {
             Assertions.assertNull(viewModel.teamMigrationState.migrationFailure)
         }
 
+    @Test
+    fun `given team name with spaces at start or end, when invoking migration, then trim the name`() = runTest {
+        // given
+        val (arrangement, viewModel) = Arrangement()
+            .withMigrateFromPersonalToTeamSuccess()
+            .arrange()
+        val onSuccess = {}
+        viewModel.teamMigrationState.teamNameTextState.setTextAndPlaceCursorAtEnd(" ${Arrangement.TEAM_NAME} ")
+        // when
+        viewModel.migrateFromPersonalToTeamAccount(onSuccess)
+        // then
+        coVerify(exactly = 1) {
+            arrangement.migrateFromPersonalToTeam(Arrangement.TEAM_NAME)
+        }
+    }
+
     private class Arrangement {
 
         @MockK
@@ -251,13 +270,23 @@ class TeamMigrationViewModelTest {
         @MockK
         lateinit var migrateFromPersonalToTeam: MigrateFromPersonalToTeamUseCase
 
+        @MockK
+        lateinit var getSelfUser: GetSelfUserUseCase
+
+        @MockK
+        lateinit var getTeamUrl: GetTeamUrlUseCase
+
         init {
             MockKAnnotations.init(this, relaxUnitFun = true)
+            coEvery { getSelfUser() } returns flowOf()
+            coEvery { getTeamUrl() } returns "TeamUrl"
         }
 
         fun arrange() = this to TeamMigrationViewModel(
             anonymousAnalyticsManager = anonymousAnalyticsManager,
             migrateFromPersonalToTeam = migrateFromPersonalToTeam,
+            getSelfUser = getSelfUser,
+            getTeamUrl = getTeamUrl
         ).also { viewModel ->
             viewModel.teamMigrationState.teamNameTextState.setTextAndPlaceCursorAtEnd(TEAM_NAME)
         }

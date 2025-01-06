@@ -148,6 +148,8 @@
     <string name="content_description_more_options">More options</string>
     <string name="content_description_add_contact">Add contact</string>
     <string name="content_description_image_message">Image message</string>
+    <string name="content_description_pause_audio">Pause audio</string>
+    <string name="content_description_play_audio">Play audio</string>
     <string name="content_description_file_message">File message</string>
     <string name="content_description_ping_everyone">Ping</string>
     <string name="content_description_self_deleting_message_timer">Set timer for self-deleting messages</string>
@@ -162,6 +164,8 @@
     <string name="content_description_calling_turn_camera_off">Turn camera off</string>
     <string name="content_description_calling_turn_speaker_on">Turn speaker on</string>
     <string name="content_description_calling_turn_speaker_off">Turn speaker off</string>
+    <string name="content_description_calling_in_call_reactions_show">Show in call reactions panel</string>
+    <string name="content_description_calling_in_call_reactions_hide">Hide in call reactions panel</string>
     <string name="content_description_show_more_options">Show more options</string>
     <string name="content_description_reply_to_messge">Reply to the message</string>
     <string name="content_description_reply_cancel">Cancel message reply</string>
@@ -280,7 +284,6 @@
     <string name="url_how_to_add_favorites" translatable="false">https://support.wire.com/hc/articles/360002855557</string>
     <string name="url_how_to_add_folders" translatable="false">https://support.wire.com/hc/articles/360002855817</string>
     <string name="url_wire_plans" translatable="false">https://wire.com/pricing</string>
-    <string name="url_team_management" translatable="false">https://teams.wire.com/</string>
     <string name="url_team_management_login" translatable="false">https://teams.wire.com/login</string>
     <string name="url_wire_enterprise" translatable="false">https://wire.com/en/enterprise</string>
     <!-- Navigation -->
@@ -570,6 +573,9 @@
     <string name="delete_group_conversation_menu_item">Delete Group…</string>
     <string name="delete_group_conversation_dialog_title">Remove “%s”?</string>
     <string name="delete_group_conversation_dialog_description">The group will be removed from your conversations list on all devices. You will no longer be able to access the group and its content.</string>
+    <string name="delete_group_locally_conversation_dialog_title">Delete “%s” group for me?</string>
+    <string name="delete_group_locally_conversation_dialog_description">You won’t be able to access the group and its content. There is no option to restore it.</string>
+    <string name="delete_group_locally_delete_for_me_label">Delete for Me</string>
     <!-- Import/Export External Media -->
     <string name="import_media_content_title">Share With Wire</string>
     <string name="import_media_searchbar_title">Search for conversation</string>
@@ -663,6 +669,7 @@
     <string name="label_block">Block</string>
     <string name="label_unblock">Unblock</string>
     <string name="label_leave_group">Leave Group</string>
+    <string name="label_delete_group_locally">Delete Group For Me</string>
     <string name="label_delete_group">Delete Group</string>
     <!-- Conversation filter BottomSheet -->
     <string name="label_filter_conversations">Filter Conversations</string>
@@ -912,6 +919,7 @@
     <string name="error_blocking_user">User could not be blocked</string>
     <string name="blocking_user_success">%s blocked</string>
     <string name="conversation_group_removed_success">“%s” removed</string>
+    <string name="conversation_group_removed_locally_success">“%s” deleted for me</string>
     <string name="leave_group_conversation_error">There was an error while leaving conversation</string>
     <string name="joined_conversation_group_success">You joined the conversation.</string>
     <string name="left_conversation_group_success">You left the conversation.</string>
@@ -1332,6 +1340,9 @@ In group conversations, the group admin can overwrite this setting.</string>
     <string name="guest_link_button_revoke_link">Revoke Link</string>
     <string name="audio_not_available">Audio not available</string>
     <string name="audio_not_available_explanation">Something went wrong while downloading this audio file. Please ask the sender to upload it again</string>
+    <string name="audio_speed_1">1x</string>
+    <string name="audio_speed_1_5">1.5x</string>
+    <string name="audio_speed_2">2x</string>
     <string name="guest_link_generate_error_message">Link couldn\'t be created. Please try again</string>
     <string name="guest_link_revoke_error_message">Link couldn\'t be revoked. Please try again</string>
     <string name="revoke_guest__room_link_dialog_text">New guests will not be able to join with this link. Current guests will still have access.</string>
@@ -1662,4 +1673,5 @@ In group conversations, the group admin can overwrite this setting.</string>
     <string name="personal_to_team_migration_error_message_already_in_team">You\'ve created or joined a team with this email address on another device.</string>
     <string name="personal_to_team_migration_error_message_slow_network">Wire could not complete your team creation due to a slow internet connection.</string>
     <string name="personal_to_team_migration_error_message_unknown_error">Wire could not complete your team creation due to an unknown error.</string>
+    <string name="reaction_sender_self">You</string>
 </resources>

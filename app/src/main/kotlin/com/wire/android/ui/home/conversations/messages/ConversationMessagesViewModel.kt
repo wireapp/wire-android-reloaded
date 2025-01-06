@@ -24,8 +24,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.wire.android.R
 import com.wire.android.appLogger
+import com.wire.android.media.audiomessage.AudioMediaPlayingState
+import com.wire.android.media.audiomessage.AudioSpeed
 import com.wire.android.media.audiomessage.ConversationAudioMessagePlayerProvider
 import com.wire.android.model.SnackBarMessage
 import com.wire.android.navigation.SavedStateViewModel
@@ -61,6 +65,7 @@ import com.wire.kalium.logic.feature.conversation.ObserveConversationDetailsUseC
 import com.wire.kalium.logic.feature.message.DeleteMessageUseCase
 import com.wire.kalium.logic.feature.message.GetMessageByIdUseCase
 import com.wire.kalium.logic.feature.message.GetSearchedConversationMessagePositionUseCase
+import com.wire.kalium.logic.feature.message.GetSenderNameByMessageIdUseCase
 import com.wire.kalium.logic.feature.message.ToggleReactionUseCase
 import com.wire.kalium.logic.feature.sessionreset.ResetSessionResult
 import com.wire.kalium.logic.feature.sessionreset.ResetSessionUseCase
@@ -74,8 +79,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -102,7 +110,8 @@ class ConversationMessagesViewModel @Inject constructor(
     private val getConversationUnreadEventsCount: GetConversationUnreadEventsCountUseCase,
     private val clearUsersTypingEvents: ClearUsersTypingEventsUseCase,
     private val getSearchedConversationMessagePosition: GetSearchedConversationMessagePositionUseCase,
-    private val deleteMessage: DeleteMessageUseCase
+    private val deleteMessage: DeleteMessageUseCase,
+    private val getSenderNameByMessageId: GetSenderNameByMessageIdUseCase
 ) : SavedStateViewModel(savedStateHandle) {
 
     private val conversationNavArgs: ConversationNavArgs = savedStateHandle.navArgs()
@@ -181,12 +190,41 @@ class ConversationMessagesViewModel @Inject constructor(
     }
 
     private fun observeAudioPlayerState() {
-        viewModelScope.launch {
-            conversationAudioMessagePlayer.observableAudioMessagesState.collect {
-                conversationViewState = conversationViewState.copy(
-                    audioMessagesState = it.toPersistentMap()
-                )
+        val observableAudioMessagesState = conversationAudioMessagePlayer.observableAudioMessagesState
+            .shareIn(viewModelScope, SharingStarted.WhileSubscribed(), 1)
+
+        val playingMessageData = observableAudioMessagesState
+            .map { audioMessageStates ->
+                audioMessageStates.firstNotNullOfOrNull { (messageId, audioState) ->
+                    if (audioState.audioMediaPlayingState == AudioMediaPlayingState.Playing) messageId else null
+                }
             }
+            .distinctUntilChanged()
+            .map { messageId ->
+                val senderName = messageId?.let {
+                    val result = getSenderNameByMessageId(conversationId, it)
+                    if (result is GetSenderNameByMessageIdUseCase.Result.Success) result.name else null
+                }
+
+                messageId to senderName
+            }
+
+        viewModelScope.launch {
+            combine(
+                observableAudioMessagesState,
+                conversationAudioMessagePlayer.audioSpeed,
+                playingMessageData
+            ) { audioMessageStates, audioSpeed, (playingMessageId, playingMessageSenderName) ->
+                val playingAudiMessage = playingMessageId?.let {
+                    PlayingAudiMessage(
+                        messageId = playingMessageId,
+                        authorName = playingMessageSenderName.orEmpty(),
+                        currentTimeMs = audioMessageStates[playingMessageId]?.currentPositionInMs ?: 0
+                    )
+                }
+                AudioMessagesState(audioMessageStates.toPersistentMap(), audioSpeed, playingAudiMessage)
+            }
+                .collect { conversationViewState = conversationViewState.copy(audioMessagesState = it) }
         }
     }
 
@@ -215,11 +253,12 @@ class ConversationMessagesViewModel @Inject constructor(
         }
 
         val paginatedMessagesFlow = getMessageForConversation(conversationId, lastReadIndex)
+            .fetchAudioWavesMaskIfNeeded()
             .flowOn(dispatchers.io())
 
         conversationViewState = conversationViewState.copy(
             messages = paginatedMessagesFlow,
-            firstuUnreadEventIndex = max(lastReadIndex - 1, 0)
+            firstUnreadEventIndex = max(lastReadIndex - 1, 0)
         )
 
         handleSelectedSearchedMessageHighlighting()
@@ -397,6 +436,12 @@ class ConversationMessagesViewModel @Inject constructor(
         }
     }
 
+    fun changeAudioSpeed(audioSpeed: AudioSpeed) {
+        viewModelScope.launch {
+            conversationAudioMessagePlayer.setSpeed(audioSpeed)
+        }
+    }
+
     fun updateImageOnFullscreenMode(message: UIMessage.Regular?) {
         lastImageMessageShownOnGallery = message
     }
@@ -432,6 +477,19 @@ class ConversationMessagesViewModel @Inject constructor(
                         conversationId = conversationId
                     )
                 )
+            }
+        }
+
+    // checking all the new messages if it's an AudioMessage and fetch WavesMask for it if so
+    private fun Flow<PagingData<UIMessage>>.fetchAudioWavesMaskIfNeeded(): Flow<PagingData<UIMessage>> =
+        map {
+            it.map { message ->
+                if (message.messageContent is UIMessageContent.AudioAssetMessage) {
+                    viewModelScope.launch {
+                        conversationAudioMessagePlayer.fetchWavesMask(conversationId, message.header.messageId)
+                    }
+                }
+                message
             }
         }
 

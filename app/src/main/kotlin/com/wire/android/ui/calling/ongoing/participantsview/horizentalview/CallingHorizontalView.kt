@@ -49,10 +49,12 @@ fun CallingHorizontalView(
     isSelfUserMuted: Boolean,
     isSelfUserCameraOn: Boolean,
     contentHeight: Dp,
-    currentUserId: UserId,
     onSelfVideoPreviewCreated: (view: View) -> Unit,
     onSelfClearVideoPreview: () -> Unit,
+    recentReactions: Map<UserId, String>,
     onDoubleTap: (selectedParticipant: SelectedParticipant) -> Unit,
+    isOnFrontCamera: Boolean,
+    flipCamera: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: Dp = dimensions().spacing4x,
     spacedBy: Dp = dimensions().spacing2x,
@@ -69,8 +71,6 @@ fun CallingHorizontalView(
         verticalArrangement = Arrangement.spacedBy(spacedBy)
     ) {
         items(items = participants, key = { it.id.toString() + it.clientId }) { participant ->
-            // API returns only id.value, without domain, till this get changed compare only id.value
-            val isSelfUser = participant.id.equalsIgnoringBlankDomain(currentUserId)
             ParticipantTile(
                 modifier = Modifier
                     .pointerInput(Unit) {
@@ -80,7 +80,7 @@ fun CallingHorizontalView(
                                     SelectedParticipant(
                                         userId = participant.id,
                                         clientId = participant.clientId,
-                                        isSelfUser = isSelfUser
+                                        isSelfUser = participant.isSelfUser,
                                     )
                                 )
                             }
@@ -90,11 +90,13 @@ fun CallingHorizontalView(
                     .height(tileHeight)
                     .animateItem(),
                 participantTitleState = participant,
-                isSelfUser = isSelfUser,
                 isSelfUserMuted = isSelfUserMuted,
                 isSelfUserCameraOn = isSelfUserCameraOn,
                 onSelfUserVideoPreviewCreated = onSelfVideoPreviewCreated,
                 onClearSelfUserVideoPreview = onSelfClearVideoPreview,
+                recentReaction = recentReactions[participant.id],
+                isOnFrontCamera = isOnFrontCamera,
+                flipCamera = flipCamera,
             )
         }
     }
@@ -111,10 +113,12 @@ fun PreviewCallingHorizontalView(
             isSelfUserMuted = true,
             isSelfUserCameraOn = false,
             contentHeight = 800.dp,
-            currentUserId = UserId("id", "domain"),
+            recentReactions = emptyMap(),
             onSelfVideoPreviewCreated = {},
             onSelfClearVideoPreview = {},
             onDoubleTap = { },
+            isOnFrontCamera = false,
+            flipCamera = { },
         )
     }
 }

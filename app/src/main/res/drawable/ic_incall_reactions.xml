@@ -1,0 +1,32 @@
+<!--
+  ~ Wire
+  ~ Copyright (C) 2024 Wire Swiss GmbH
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program. If not, see http://www.gnu.org/licenses/.
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="20"
+    android:viewportHeight="20">
+  <path
+      android:pathData="M0,10C0,15.523 4.477,20 10,20C15.523,20 20,15.523 20,10C20,4.477 15.523,0 10,0C4.477,0 0,4.477 0,10ZM18.125,10C18.125,14.487 14.487,18.125 10,18.125C5.513,18.125 1.875,14.487 1.875,10C1.875,5.513 5.513,1.875 10,1.875C14.487,1.875 18.125,5.513 18.125,10ZM3.875,11.25C4.454,14.103 6.976,16.25 10,16.25C13.024,16.25 15.546,14.103 16.125,11.25H3.875ZM5.678,12.518C5.678,12.518 10.985,12.5 14.342,12.5C14.342,12.5 14.043,13.102 13.308,13.75H6.692C6.293,13.398 5.949,12.983 5.678,12.518ZM12.5,8.75C13.19,8.75 13.75,8.19 13.75,7.5C13.75,6.81 13.19,6.25 12.5,6.25C11.81,6.25 11.25,6.81 11.25,7.5C11.25,8.19 11.81,8.75 12.5,8.75ZM8.75,7.5C8.75,8.19 8.19,8.75 7.5,8.75C6.81,8.75 6.25,8.19 6.25,7.5C6.25,6.81 6.81,6.25 7.5,6.25C8.19,6.25 8.75,6.81 8.75,7.5Z"
+      android:fillColor="#ffffff"
+      android:fillType="evenOdd"/>
+  <group>
+    <clip-path
+        android:pathData="M0,10C0,15.523 4.477,20 10,20C15.523,20 20,15.523 20,10C20,4.477 15.523,0 10,0C4.477,0 0,4.477 0,10ZM18.125,10C18.125,14.487 14.487,18.125 10,18.125C5.513,18.125 1.875,14.487 1.875,10C1.875,5.513 5.513,1.875 10,1.875C14.487,1.875 18.125,5.513 18.125,10ZM3.875,11.25C4.454,14.103 6.976,16.25 10,16.25C13.024,16.25 15.546,14.103 16.125,11.25H3.875ZM5.678,12.518C5.678,12.518 10.985,12.5 14.342,12.5C14.342,12.5 14.043,13.102 13.308,13.75H6.692C6.293,13.398 5.949,12.983 5.678,12.518ZM12.5,8.75C13.19,8.75 13.75,8.19 13.75,7.5C13.75,6.81 13.19,6.25 12.5,6.25C11.81,6.25 11.25,6.81 11.25,7.5C11.25,8.19 11.81,8.75 12.5,8.75ZM8.75,7.5C8.75,8.19 8.19,8.75 7.5,8.75C6.81,8.75 6.25,8.19 6.25,7.5C6.25,6.81 6.81,6.25 7.5,6.25C8.19,6.25 8.75,6.81 8.75,7.5Z"
+        android:fillType="evenOdd"/>
+  </group>
+</vector>

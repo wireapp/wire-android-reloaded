@@ -65,7 +65,6 @@ fun TeamMigrationDoneStepScreen(
 ) {
     val context = LocalContext.current
 
-    val teamManagementUrl = stringResource(R.string.url_team_management)
     TeamMigrationDoneStepContent(
         onBackToWireClicked = {
             teamMigrationViewModel.sendPersonalTeamCreationFlowCompletedEvent(
@@ -79,11 +78,14 @@ fun TeamMigrationDoneStepScreen(
             )
         },
         onOpenTeamManagementClicked = {
+            val teamManagementUrl = teamMigrationViewModel.teamMigrationState.teamUrl
+
             teamMigrationViewModel.sendPersonalTeamCreationFlowCompletedEvent(
                 modalOpenTeamManagementButtonClicked = true
             )
             CustomTabsHelper.launchUrl(context, teamManagementUrl)
         },
+        username = teamMigrationViewModel.teamMigrationState.username,
         teamName = teamMigrationViewModel.teamMigrationState.teamNameTextState.text.toString()
     )
 
@@ -98,6 +100,7 @@ fun TeamMigrationDoneStepScreen(
 private fun TeamMigrationDoneStepContent(
     onBackToWireClicked: () -> Unit,
     onOpenTeamManagementClicked: () -> Unit,
+    username: String,
     teamName: String,
     modifier: Modifier = Modifier
 ) {
@@ -130,7 +133,7 @@ private fun TeamMigrationDoneStepContent(
                         bottom = dimensions().spacing56x
                     )
                     .align(alignment = Alignment.CenterHorizontally),
-                text = stringResource(R.string.personal_to_team_migration_done_step, teamName),
+                text = stringResource(R.string.personal_to_team_migration_done_step, username),
                 style = MaterialTheme.wireTypography.title01,
                 color = colorsScheme().onBackground
             )
@@ -187,6 +190,6 @@ private fun TeamMigrationDoneStepContent(
 @Composable
 private fun TeamMigrationDoneStepScreenPreview() {
     WireTheme {
-        TeamMigrationDoneStepContent({}, {}, teamName = "teamName")
+        TeamMigrationDoneStepContent({}, {}, username = "John", teamName = "teamName")
     }
 }
