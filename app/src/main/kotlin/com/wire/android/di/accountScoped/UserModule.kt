@@ -26,7 +26,7 @@ import com.wire.kalium.logic.feature.asset.GetAssetSizeLimitUseCase
 import com.wire.kalium.logic.feature.asset.GetAvatarAssetUseCase
 import com.wire.kalium.logic.feature.client.FinalizeMLSClientAfterE2EIEnrollment
 import com.wire.kalium.logic.feature.conversation.GetAllContactsNotInConversationUseCase
-import com.wire.kalium.logic.feature.e2ei.CertificateRevocationListCheckWorker
+import com.wire.kalium.logic.feature.e2ei.SyncCertificateRevocationListUseCase
 import com.wire.kalium.logic.feature.e2ei.usecase.GetMLSClientIdentityUseCase
 import com.wire.kalium.logic.feature.e2ei.usecase.GetMembersE2EICertificateStatusesUseCase
 import com.wire.kalium.logic.feature.e2ei.usecase.IsOtherUserE2EIVerifiedUseCase
@@ -232,8 +232,8 @@ class UserModule {
 
     @ViewModelScoped
     @Provides
-    fun provideCertificateRevocationListCheckWorker(userScope: UserScope): CertificateRevocationListCheckWorker =
-        userScope.certificateRevocationListCheckWorker
+    fun provideCertificateRevocationListCheckWorker(userScope: UserScope): SyncCertificateRevocationListUseCase =
+        userScope.syncCertificateRevocationListUseCase
 
     @ViewModelScoped
     @Provides

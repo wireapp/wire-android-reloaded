@@ -29,7 +29,6 @@ import com.wire.android.model.ImageAsset.UserAvatarAsset
 import com.wire.android.navigation.SavedStateViewModel
 import com.wire.android.util.ui.WireSessionImageLoader
 import com.wire.kalium.logic.feature.client.NeedsToRegisterClientUseCase
-import com.wire.kalium.logic.feature.e2ei.CertificateRevocationListCheckWorker
 import com.wire.kalium.logic.feature.user.GetSelfUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
@@ -45,7 +44,6 @@ class HomeViewModel @Inject constructor(
     private val needsToRegisterClient: NeedsToRegisterClientUseCase,
     private val wireSessionImageLoader: WireSessionImageLoader,
     private val shouldTriggerMigrationForUser: ShouldTriggerMigrationForUserUserCase,
-    private val certificateRevocationListCheckWorker: CertificateRevocationListCheckWorker
 ) : SavedStateViewModel(savedStateHandle) {
 
     var homeState by mutableStateOf(HomeState())
@@ -53,9 +51,6 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadUserAvatar()
-        viewModelScope.launch {
-            certificateRevocationListCheckWorker.execute()
-        }
     }
 
     fun checkRequirements(onRequirement: (HomeRequirement) -> Unit) {
