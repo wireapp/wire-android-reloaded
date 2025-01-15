@@ -29,6 +29,8 @@ object NotificationConstants {
     const val OUTGOING_CALL_CHANNEL_NAME = "Outgoing call"
     const val ONGOING_CALL_CHANNEL_ID = "com.wire.android.notification_ongoing_call_channel"
     const val ONGOING_CALL_CHANNEL_NAME = "Ongoing calls"
+    const val PLAYING_AUDIO_CHANNEL_ID = "com.wire.android.notification_playing_audio_message_channel"
+    const val PLAYING_AUDIO_CHANNEL_NAME = "Playing Audio Message"
 
     const val WEB_SOCKET_CHANNEL_ID = "com.wire.android.persistent_web_socket_channel"
     const val WEB_SOCKET_CHANNEL_NAME = "Persistent WebSocket"
@@ -90,5 +92,6 @@ enum class NotificationIds {
     MESSAGE_SYNC_NOTIFICATION_ID,
     MIGRATION_NOTIFICATION_ID,
     SINGLE_USER_MIGRATION_NOTIFICATION_ID,
-    MIGRATION_ERROR_NOTIFICATION_ID
+    MIGRATION_ERROR_NOTIFICATION_ID,
+    PLAYING_AUDIO_MESSAGE_ID
 }

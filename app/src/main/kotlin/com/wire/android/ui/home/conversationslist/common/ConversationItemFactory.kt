@@ -83,7 +83,7 @@ fun ConversationItemFactory(
     openUserProfile: (UserId) -> Unit = {},
     joinCall: (ConversationId) -> Unit = {},
     onAudioPermissionPermanentlyDenied: () -> Unit = {},
-    onPlayPauseCurrentAudio: (conversationId: ConversationId, messageId: String) -> Unit = { _, _ -> },
+    onPlayPauseCurrentAudio: () -> Unit = { },
     onStopCurrentAudio: () -> Unit = {}
 ) {
     val openConversationOptionDescription = stringResource(R.string.content_description_conversation_details_more_btn)
@@ -163,7 +163,7 @@ private fun GeneralConversationItem(
     selectOnRadioGroup: () -> Unit = {},
     subTitle: @Composable () -> Unit = {},
     onAudioPermissionPermanentlyDenied: () -> Unit,
-    onPlayPauseCurrentAudio: (conversationId: ConversationId, messageId: String) -> Unit = { _, _ -> },
+    onPlayPauseCurrentAudio: () -> Unit = { },
     onStopCurrentAudio: () -> Unit = {}
 ) {
     when (conversation) {
@@ -200,7 +200,7 @@ private fun GeneralConversationItem(
                             } else if (conversation.playingAudio != null) {
                                 AudioControlButtons(
                                     playingAudio = conversation.playingAudio!!,
-                                    onPlayPauseCurrentAudio = { onPlayPauseCurrentAudio(conversation.conversationId, it) },
+                                    onPlayPauseCurrentAudio = onPlayPauseCurrentAudio,
                                     onStopCurrentAudio = onStopCurrentAudio
                                 )
                             } else {
@@ -247,7 +247,7 @@ private fun GeneralConversationItem(
                             if (conversation.playingAudio != null) {
                                 AudioControlButtons(
                                     playingAudio = conversation.playingAudio!!,
-                                    onPlayPauseCurrentAudio = { onPlayPauseCurrentAudio(conversation.conversationId, it) },
+                                    onPlayPauseCurrentAudio = onPlayPauseCurrentAudio,
                                     onStopCurrentAudio = onStopCurrentAudio
                                 )
                             } else {
@@ -296,7 +296,7 @@ private fun GeneralConversationItem(
 fun AudioControlButtons(
     playingAudio: PlayingAudioInConversation,
     modifier: Modifier = Modifier,
-    onPlayPauseCurrentAudio: (messageId: String) -> Unit = {},
+    onPlayPauseCurrentAudio: () -> Unit = {},
     onStopCurrentAudio: () -> Unit = {}
 ) {
     Row(modifier = modifier.padding(end = dimensions().spacing8x)) {
@@ -309,7 +309,7 @@ fun AudioControlButtons(
             contentDescription = null, // TODO
             modifier = Modifier
                 .clip(leftBtnShape)
-                .clickable(role = Role.Button) { onPlayPauseCurrentAudio(playingAudio.messageId) }
+                .clickable(role = Role.Button, onClick = onPlayPauseCurrentAudio)
                 .border(
                     width = dimensions().spacing1x,
                     shape = leftBtnShape,

@@ -29,7 +29,7 @@ import androidx.paging.map
 import com.wire.android.R
 import com.wire.android.appLogger
 import com.wire.android.media.audiomessage.AudioSpeed
-import com.wire.android.media.audiomessage.ConversationAudioMessagePlayerProvider
+import com.wire.android.media.audiomessage.ConversationAudioMessagePlayer
 import com.wire.android.model.SnackBarMessage
 import com.wire.android.navigation.SavedStateViewModel
 import com.wire.android.ui.home.conversations.ConversationNavArgs
@@ -77,6 +77,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -103,7 +104,7 @@ class ConversationMessagesViewModel @Inject constructor(
     private val getMessageForConversation: GetMessagesForConversationUseCase,
     private val toggleReaction: ToggleReactionUseCase,
     private val resetSession: ResetSessionUseCase,
-    private val audioMessagePlayerProvider: ConversationAudioMessagePlayerProvider,
+    private val audioMessagePlayer: ConversationAudioMessagePlayer,
     private val getConversationUnreadEventsCount: GetConversationUnreadEventsCountUseCase,
     private val clearUsersTypingEvents: ClearUsersTypingEventsUseCase,
     private val getSearchedConversationMessagePosition: GetSearchedConversationMessagePositionUseCase,
@@ -113,7 +114,6 @@ class ConversationMessagesViewModel @Inject constructor(
     private val conversationNavArgs: ConversationNavArgs = savedStateHandle.navArgs()
     val conversationId: QualifiedID = conversationNavArgs.conversationId
     private val searchedMessageIdNavArgs: String? = conversationNavArgs.searchedMessageId
-    private val audioMessagePlayer = audioMessagePlayerProvider.provide()
 
     var conversationViewState by mutableStateOf(
         ConversationMessagesViewState(
@@ -188,6 +188,7 @@ class ConversationMessagesViewModel @Inject constructor(
     private fun observeAudioPlayerState() {
         val observableAudioMessagesState = audioMessagePlayer.observableAudioMessagesState
             .map { audioMessageStates -> audioMessageStates.mapKeys { it.key.messageId } }
+//            .shareIn(viewModelScope, SharingStarted.Eagerly)
 
         viewModelScope.launch {
             combine(
@@ -197,7 +198,7 @@ class ConversationMessagesViewModel @Inject constructor(
             ) { audioMessageStates, audioSpeed, playingAudiMessage ->
                 AudioMessagesState(audioMessageStates.toPersistentMap(), audioSpeed, playingAudiMessage)
             }
-                .collect { conversationViewState = conversationViewState.copy(audioMessagesState = it) }
+                .collectLatest { conversationViewState = conversationViewState.copy(audioMessagesState = it) }
         }
     }
 

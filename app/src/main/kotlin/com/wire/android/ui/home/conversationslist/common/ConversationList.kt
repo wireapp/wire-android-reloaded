@@ -74,7 +74,7 @@ fun ConversationList(
     onJoinCall: (ConversationId) -> Unit = {},
     onConversationSelectedOnRadioGroup: (ConversationItem) -> Unit = {},
     onAudioPermissionPermanentlyDenied: () -> Unit = {},
-    onPlayPauseCurrentAudio: (conversationId: ConversationId, messageId: String) -> Unit = { _, _ -> },
+    onPlayPauseCurrentAudio: () -> Unit = { },
     onStopCurrentAudio: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -154,7 +154,7 @@ fun ConversationList(
     onJoinCall: (ConversationId) -> Unit = {},
     onConversationSelectedOnRadioGroup: (ConversationId) -> Unit = {},
     onAudioPermissionPermanentlyDenied: () -> Unit = {},
-    onPlayPauseCurrentAudio: (conversationId: ConversationId, messageId: String) -> Unit = { _, _ -> },
+    onPlayPauseCurrentAudio: () -> Unit = { },
     onStopCurrentAudio: () -> Unit = {}
 ) {
     val context = LocalContext.current

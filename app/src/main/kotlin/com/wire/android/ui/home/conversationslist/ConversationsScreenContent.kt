@@ -188,9 +188,9 @@ fun ConversationsScreenContent(
             }
         }
 
-        val onPlayPauseCurrentAudio: (conversationId: ConversationId, messageId: String) -> Unit = remember {
-            { conversationId, messageId ->
-                conversationListViewModel.playPauseCurrentAudio(conversationId, messageId)
+        val onPlayPauseCurrentAudio: () -> Unit = remember {
+            {
+                conversationListViewModel.playPauseCurrentAudio()
             }
         }
 

@@ -23,12 +23,14 @@ import android.media.PlaybackParams
 import app.cash.turbine.TurbineTestContext
 import app.cash.turbine.test
 import com.wire.android.framework.FakeKaliumFileSystem
+import com.wire.android.media.audiomessage.AudioFocusHelper
 import com.wire.android.media.audiomessage.AudioMediaPlayingState
 import com.wire.android.media.audiomessage.AudioSpeed
 import com.wire.android.media.audiomessage.AudioState
 import com.wire.android.media.audiomessage.AudioWavesMaskHelper
 import com.wire.android.media.audiomessage.ConversationAudioMessagePlayer
 import com.wire.android.media.audiomessage.ConversationAudioMessagePlayer.MessageIdWrapper
+import com.wire.android.services.ServicesManager
 import com.wire.kalium.logic.CoreLogic
 import com.wire.kalium.logic.data.auth.AccountInfo
 import com.wire.kalium.logic.data.id.ConversationId
@@ -109,6 +111,9 @@ class ConversationAudioMessagePlayerTest {
             verify { mediaPlayer.prepare() }
             verify { mediaPlayer.setDataSource(any(), any()) }
             verify { mediaPlayer.start() }
+
+            verify(exactly = 1) { audioFocusHelper.request() }
+            verify(exactly = 1) { servicesManager.startPlayingAudioMessageService() }
 
             verify(exactly = 0) { mediaPlayer.seekTo(any()) }
         }
@@ -256,7 +261,13 @@ class ConversationAudioMessagePlayerTest {
                     assert(currentState!!.audioMediaPlayingState is AudioMediaPlayingState.Stopped)
                 }
                 awaitAndAssertStateUpdate { state ->
-                    assert(state.size == 2)
+                    val currentState = state[firstAudioMessageIdWrapper]
+                    assert(currentState != null)
+                    assert(currentState!!.audioMediaPlayingState is AudioMediaPlayingState.Completed)
+                }
+                awaitItem() // seekToAudioPosition
+                awaitAndAssertStateUpdate { state ->
+                    assertEquals(2, state.size)
 
                     val currentState = state[secondAudioMessageIdWrapper]
                     assert(currentState != null)
@@ -357,7 +368,13 @@ class ConversationAudioMessagePlayerTest {
                     assert(currentState!!.audioMediaPlayingState is AudioMediaPlayingState.Stopped)
                 }
                 awaitAndAssertStateUpdate { state ->
-                    assert(state.size == 2)
+                    val currentState = state[firstAudioMessageIdWrapper]
+                    assert(currentState != null)
+                    assert(currentState!!.audioMediaPlayingState is AudioMediaPlayingState.Completed)
+                }
+                awaitItem() // seekToAudioPosition
+                awaitAndAssertStateUpdate { state ->
+                    assertEquals(2, state.size)
 
                     val currentState = state[secondAudioMessageIdWrapper]
                     assert(currentState != null)
@@ -398,6 +415,12 @@ class ConversationAudioMessagePlayerTest {
                     assert(currentState != null)
                     assert(currentState!!.audioMediaPlayingState is AudioMediaPlayingState.Stopped)
                 }
+                awaitAndAssertStateUpdate { state ->
+                    val currentState = state[firstAudioMessageIdWrapper]
+                    assert(currentState != null)
+                    assert(currentState!!.audioMediaPlayingState is AudioMediaPlayingState.Completed)
+                }
+                awaitItem() // seekToAudioPosition
                 awaitAndAssertStateUpdate { state ->
                     val currentState = state[firstAudioMessageIdWrapper]
                     assert(currentState != null)
@@ -547,6 +570,37 @@ class ConversationAudioMessagePlayerTest {
         verify(exactly = 1) { arrangement.mediaPlayer.playbackParams = params.setSpeed(2F) }
     }
 
+    @Test
+    fun givenPlayingAudioMessage_whenStopAudioCalled_thenServiceStoppedAndAudioFocusAbandoned() = runTest {
+        val (arrangement, conversationAudioMessagePlayer) = Arrangement()
+            .withAudioMediaPlayerReturningTotalTime(1000)
+            .withSuccessFullAssetFetch()
+            .withCurrentSession()
+            .arrange()
+
+        val testAudioMessageId = "some-dummy-message-id"
+        val conversationId = ConversationId("some-dummy-value", "some.dummy.domain")
+
+        conversationAudioMessagePlayer.observableAudioMessagesState.test {
+            // skip first emit from onStart
+            awaitItem()
+            conversationAudioMessagePlayer.playAudio(
+                conversationId,
+                testAudioMessageId
+            )
+            this@runTest.advanceUntilIdle()
+
+            conversationAudioMessagePlayer.forceToStopCurrentAudioMessage()
+
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        with(arrangement) {
+            verify(exactly = 1) { audioFocusHelper.abandon() }
+            verify(exactly = 1) { servicesManager.stopPlayingAudioMessageService() }
+        }
+    }
+
     private suspend fun <T> TurbineTestContext<T>.awaitAndAssertStateUpdate(assertion: (T) -> Unit) {
         val state = awaitItem()
         assert(state != null)
@@ -569,6 +623,12 @@ class Arrangement {
     @MockK
     lateinit var wavesMaskHelper: AudioWavesMaskHelper
 
+    @MockK
+    lateinit var servicesManager: ServicesManager
+
+    @MockK
+    lateinit var audioFocusHelper: AudioFocusHelper
+
     private val testScope = CoroutineScope(UnconfinedTestDispatcher())
 
     private val conversationAudioMessagePlayer by lazy {
@@ -576,6 +636,8 @@ class Arrangement {
             context,
             mediaPlayer,
             wavesMaskHelper,
+            { servicesManager },
+            audioFocusHelper,
             coreLogic,
             testScope
         )
@@ -587,6 +649,13 @@ class Arrangement {
         every { wavesMaskHelper.getWaveMask(any<Path>()) } returns WAVES_MASK
         every { wavesMaskHelper.clear() } returns Unit
         every { mediaPlayer.currentPosition } returns 100
+
+        every { servicesManager.stopPlayingAudioMessageService() } returns Unit
+        every { servicesManager.startPlayingAudioMessageService() } returns Unit
+
+        every { audioFocusHelper.setListener(any(), any()) } returns Unit
+        every { audioFocusHelper.abandon() } returns Unit
+        every { audioFocusHelper.request() } returns true
     }
 
     fun withCurrentSession() = apply {

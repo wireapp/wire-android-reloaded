@@ -73,6 +73,8 @@ class NotificationChannelsManager @Inject constructor(
         // OngoingCall is not user specific channel, but common for all users.
         createOngoingNotificationChannel()
 
+        createPlayingAudioMessageNotificationChannel()
+
         deleteRedundantChannelGroups(allUsers)
     }
 
@@ -144,6 +146,20 @@ class NotificationChannelsManager @Inject constructor(
             .setName(NotificationConstants.ONGOING_CALL_CHANNEL_NAME)
             .setVibrationEnabled(false)
             .setImportance(NotificationManagerCompat.IMPORTANCE_DEFAULT)
+            .setSound(null, null)
+            .setShowBadge(false)
+            .build()
+
+        notificationManagerCompat.createNotificationChannel(notificationChannel)
+    }
+
+    private fun createPlayingAudioMessageNotificationChannel() {
+        val channelId = NotificationConstants.PLAYING_AUDIO_CHANNEL_ID
+        val notificationChannel = NotificationChannelCompat
+            .Builder(channelId, NotificationManagerCompat.IMPORTANCE_LOW)
+            .setName(NotificationConstants.PLAYING_AUDIO_CHANNEL_NAME)
+            .setVibrationEnabled(false)
+            .setImportance(NotificationManagerCompat.IMPORTANCE_LOW)
             .setSound(null, null)
             .setShowBadge(false)
             .build()
