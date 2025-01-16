@@ -85,7 +85,7 @@ import com.wire.kalium.logic.data.user.UserId
  * This is a base for creating screens for displaying list of conversations.
  * Can be used to create proper navigation destination for different sources of conversations, like archive.
  */
-@Suppress("ComplexMethod", "NestedBlockDepth")
+@Suppress("ComplexMethod", "NestedBlockDepth", "Wrapping")
 @Composable
 fun ConversationsScreenContent(
     navigator: Navigator,
@@ -189,6 +189,18 @@ fun ConversationsScreenContent(
             }
         }
 
+        val onPlayPauseCurrentAudio: (conversationId: ConversationId, messageId: String) -> Unit = remember {
+            { conversationId, messageId ->
+                conversationListViewModel.playPauseCurrentAudio(conversationId, messageId)
+            }
+        }
+
+        val onStopCurrentAudio: () -> Unit = remember {
+            {
+                conversationListViewModel.stopCurrentAudio()
+            }
+        }
+
         when (val state = conversationListViewModel.conversationListState) {
             is ConversationListState.Paginated -> {
                 val lazyPagingItems = state.conversations.collectAsLazyPagingItems()
@@ -212,7 +224,10 @@ fun ConversationsScreenContent(
                                     R.string.call_permission_dialog_description
                                 )
                             )
-                        }
+                        },
+                        onPlayPauseCurrentAudio = onPlayPauseCurrentAudio,
+                        onStopCurrentAudio = onStopCurrentAudio
+
                     )
                     // when there is no conversation in any folder
                     searchBarState.isSearchActive -> SearchConversationsEmptyContent(onNewConversationClicked = onNewConversationClicked)
@@ -239,7 +254,9 @@ fun ConversationsScreenContent(
                                     R.string.call_permission_dialog_description
                                 )
                             )
-                        }
+                        },
+                        onPlayPauseCurrentAudio = onPlayPauseCurrentAudio,
+                        onStopCurrentAudio = onStopCurrentAudio
                     )
                     // when there is no conversation in any folder
                     searchBarState.isSearchActive -> SearchConversationsEmptyContent(onNewConversationClicked = onNewConversationClicked)

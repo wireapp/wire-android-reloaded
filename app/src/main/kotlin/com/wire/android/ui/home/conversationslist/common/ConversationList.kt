@@ -73,7 +73,9 @@ fun ConversationList(
     onOpenUserProfile: (UserId) -> Unit = {},
     onJoinCall: (ConversationId) -> Unit = {},
     onConversationSelectedOnRadioGroup: (ConversationItem) -> Unit = {},
-    onAudioPermissionPermanentlyDenied: () -> Unit = {}
+    onAudioPermissionPermanentlyDenied: () -> Unit = {},
+    onPlayPauseCurrentAudio: (conversationId: ConversationId, messageId: String) -> Unit = { _, _ -> },
+    onStopCurrentAudio: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -123,6 +125,8 @@ fun ConversationList(
                             openUserProfile = onOpenUserProfile,
                             joinCall = onJoinCall,
                             onAudioPermissionPermanentlyDenied = onAudioPermissionPermanentlyDenied,
+                            onPlayPauseCurrentAudio = onPlayPauseCurrentAudio,
+                            onStopCurrentAudio = onStopCurrentAudio
                         )
 
                     else -> {}
@@ -149,7 +153,9 @@ fun ConversationList(
     onOpenUserProfile: (UserId) -> Unit = {},
     onJoinCall: (ConversationId) -> Unit = {},
     onConversationSelectedOnRadioGroup: (ConversationId) -> Unit = {},
-    onAudioPermissionPermanentlyDenied: () -> Unit = {}
+    onAudioPermissionPermanentlyDenied: () -> Unit = {},
+    onPlayPauseCurrentAudio: (conversationId: ConversationId, messageId: String) -> Unit = { _, _ -> },
+    onStopCurrentAudio: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -178,6 +184,8 @@ fun ConversationList(
                     openUserProfile = onOpenUserProfile,
                     joinCall = onJoinCall,
                     onAudioPermissionPermanentlyDenied = onAudioPermissionPermanentlyDenied,
+                    onPlayPauseCurrentAudio = onPlayPauseCurrentAudio,
+                    onStopCurrentAudio = onStopCurrentAudio
                 )
             }
         }
@@ -208,7 +216,8 @@ fun previewConversationList(count: Int, startIndex: Int = 0, unread: Boolean = f
                     proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
                     searchQuery = searchQuery,
                     isFavorite = false,
-                    folder = null
+                    folder = null,
+                    playingAudio = null
                 )
             )
 
@@ -229,7 +238,8 @@ fun previewConversationList(count: Int, startIndex: Int = 0, unread: Boolean = f
                     searchQuery = searchQuery,
                     isFavorite = false,
                     isUserDeleted = false,
-                    folder = null
+                    folder = null,
+                    playingAudio = null
                 )
             )
         }

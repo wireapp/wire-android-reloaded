@@ -93,6 +93,7 @@ import com.wire.android.feature.sketch.model.DrawingCanvasNavArgs
 import com.wire.android.feature.sketch.model.DrawingCanvasNavBackArgs
 import com.wire.android.mapper.MessageDateTimeGroup
 import com.wire.android.media.audiomessage.AudioSpeed
+import com.wire.android.media.audiomessage.PlayingAudioMessage
 import com.wire.android.model.SnackBarMessage
 import com.wire.android.navigation.BackStackMode
 import com.wire.android.navigation.NavigationCommand
@@ -146,7 +147,6 @@ import com.wire.android.ui.home.conversations.media.preview.ImagesPreviewNavBack
 import com.wire.android.ui.home.conversations.messages.AudioMessagesState
 import com.wire.android.ui.home.conversations.messages.ConversationMessagesViewModel
 import com.wire.android.ui.home.conversations.messages.ConversationMessagesViewState
-import com.wire.android.ui.home.conversations.messages.PlayingAudiMessage
 import com.wire.android.ui.home.conversations.messages.draft.MessageDraftViewModel
 import com.wire.android.ui.home.conversations.messages.item.MessageClickActions
 import com.wire.android.ui.home.conversations.messages.item.MessageContainerItem
@@ -1417,58 +1417,58 @@ fun JumpToLastMessageButton(
 @Composable
 fun BoxScope.JumpToPlayingAudioButton(
     lazyListState: LazyListState,
-    playingAudiMessage: PlayingAudiMessage?,
+    playingAudiMessage: PlayingAudioMessage,
     lazyPagingMessages: LazyPagingItems<UIMessage>,
     modifier: Modifier = Modifier,
     coroutineScope: CoroutineScope = rememberCoroutineScope()
 ) {
-    val indexOfPlayedMessage = playingAudiMessage?.let {
-        lazyPagingMessages.itemSnapshotList
+    if (playingAudiMessage is PlayingAudioMessage.Some && playingAudiMessage.state.isPlaying()) {
+        val indexOfPlayedMessage = lazyPagingMessages.itemSnapshotList
             .indexOfFirst { playingAudiMessage.messageId == it?.header?.messageId }
-    } ?: -1
 
-    if (indexOfPlayedMessage < 0) return
+        if (indexOfPlayedMessage < 0) return
 
-    val firstVisibleIndex = lazyListState.firstVisibleItemIndex
-    val lastVisibleIndex = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: firstVisibleIndex
+        val firstVisibleIndex = lazyListState.firstVisibleItemIndex
+        val lastVisibleIndex = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: firstVisibleIndex
 
-    if (indexOfPlayedMessage in firstVisibleIndex..lastVisibleIndex) return
+        if (indexOfPlayedMessage in firstVisibleIndex..lastVisibleIndex) return
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .wrapContentWidth()
-            .align(Alignment.TopCenter)
-            .padding(all = dimensions().spacing8x)
-            .clickable { coroutineScope.launch { lazyListState.animateScrollToItem(indexOfPlayedMessage) } }
-            .background(
-                color = colorsScheme().secondaryText,
-                shape = RoundedCornerShape(dimensions().corner16x)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier
+                .wrapContentWidth()
+                .align(Alignment.TopCenter)
+                .padding(all = dimensions().spacing8x)
+                .clickable { coroutineScope.launch { lazyListState.animateScrollToItem(indexOfPlayedMessage) } }
+                .background(
+                    color = colorsScheme().secondaryText,
+                    shape = RoundedCornerShape(dimensions().corner16x)
+                )
+                .padding(horizontal = dimensions().spacing16x, vertical = dimensions().spacing8x)
+        ) {
+            Icon(
+                modifier = Modifier.size(dimensions().systemMessageIconSize),
+                painter = painterResource(id = R.drawable.ic_play),
+                contentDescription = null,
+                tint = MaterialTheme.wireColorScheme.onPrimaryButtonEnabled
             )
-            .padding(horizontal = dimensions().spacing16x, vertical = dimensions().spacing8x)
-    ) {
-        Icon(
-            modifier = Modifier.size(dimensions().systemMessageIconSize),
-            painter = painterResource(id = R.drawable.ic_play),
-            contentDescription = null,
-            tint = MaterialTheme.wireColorScheme.onPrimaryButtonEnabled
-        )
-        Text(
-            modifier = Modifier
-                .padding(horizontal = dimensions().spacing8x)
-                .weight(1f, fill = false),
-            text = playingAudiMessage!!.authorName,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = colorsScheme().onPrimaryButtonEnabled,
-            style = MaterialTheme.wireTypography.body04,
-        )
-        Text(
-            modifier = Modifier,
-            text = DateAndTimeParsers.audioMessageTime(playingAudiMessage.currentTimeMs.toLong()),
-            color = colorsScheme().onPrimaryButtonEnabled,
-            style = MaterialTheme.wireTypography.label03,
-        )
+            Text(
+                modifier = Modifier
+                    .padding(horizontal = dimensions().spacing8x)
+                    .weight(1f, fill = false),
+                text = playingAudiMessage.authorName.asString(),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = colorsScheme().onPrimaryButtonEnabled,
+                style = MaterialTheme.wireTypography.body04,
+            )
+            Text(
+                modifier = Modifier,
+                text = DateAndTimeParsers.audioMessageTime(playingAudiMessage.state.currentPositionInMs.toLong()),
+                color = colorsScheme().onPrimaryButtonEnabled,
+                style = MaterialTheme.wireTypography.label03,
+            )
+        }
     }
 }
 

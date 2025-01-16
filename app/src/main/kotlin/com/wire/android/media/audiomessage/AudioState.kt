@@ -19,6 +19,8 @@ package com.wire.android.media.audiomessage
 
 import androidx.annotation.StringRes
 import com.wire.android.R
+import com.wire.android.util.ui.UIText
+import com.wire.kalium.logic.data.id.ConversationId
 
 data class AudioState(
     val audioMediaPlayingState: AudioMediaPlayingState,
@@ -40,11 +42,25 @@ data class AudioState(
         return totalTimeInMs
     }
 
+    fun isPlaying() = audioMediaPlayingState is AudioMediaPlayingState.Playing
+    fun isPlayingOrPaused() = audioMediaPlayingState is AudioMediaPlayingState.Playing
+            || audioMediaPlayingState is AudioMediaPlayingState.Paused
+
     sealed class TotalTimeInMs {
         object NotKnown : TotalTimeInMs()
 
         data class Known(val value: Int) : TotalTimeInMs()
     }
+}
+
+sealed class PlayingAudioMessage {
+    data object None : PlayingAudioMessage()
+    data class Some(
+        val conversationId: ConversationId,
+        val messageId: String,
+        val authorName: UIText,
+        val state: AudioState
+    ) : PlayingAudioMessage()
 }
 
 @Suppress("MagicNumber")
@@ -84,27 +100,32 @@ sealed class AudioMediaPlayingState {
 }
 
 sealed class AudioMediaPlayerStateUpdate(
+    open val conversationId: ConversationId,
     open val messageId: String
 ) {
     data class AudioMediaPlayingStateUpdate(
+        override val conversationId: ConversationId,
         override val messageId: String,
         val audioMediaPlayingState: AudioMediaPlayingState
-    ) : AudioMediaPlayerStateUpdate(messageId)
+    ) : AudioMediaPlayerStateUpdate(conversationId, messageId)
 
     data class PositionChangeUpdate(
+        override val conversationId: ConversationId,
         override val messageId: String,
         val position: Int
-    ) : AudioMediaPlayerStateUpdate(messageId)
+    ) : AudioMediaPlayerStateUpdate(conversationId, messageId)
 
     data class TotalTimeUpdate(
+        override val conversationId: ConversationId,
         override val messageId: String,
         val totalTimeInMs: Int
-    ) : AudioMediaPlayerStateUpdate(messageId)
+    ) : AudioMediaPlayerStateUpdate(conversationId, messageId)
 
     data class WaveMaskUpdate(
+        override val conversationId: ConversationId,
         override val messageId: String,
         val waveMask: List<Int>
-    ) : AudioMediaPlayerStateUpdate(messageId)
+    ) : AudioMediaPlayerStateUpdate(conversationId, messageId)
 }
 
 sealed class RecordAudioMediaPlayerStateUpdate {

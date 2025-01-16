@@ -21,22 +21,31 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.media.MediaPlayer.SEEK_CLOSEST_SYNC
 import android.net.Uri
+import com.wire.android.R
+import com.wire.android.di.ApplicationScope
 import com.wire.android.di.KaliumCoreLogic
+import com.wire.android.util.extension.intervalFlow
+import com.wire.android.util.ui.UIText
 import com.wire.kalium.logic.CoreLogic
 import com.wire.kalium.logic.data.id.ConversationId
 import com.wire.kalium.logic.feature.asset.MessageAssetResult
+import com.wire.kalium.logic.feature.message.GetNextAudioMessageInConversationUseCase
+import com.wire.kalium.logic.feature.message.GetSenderNameByMessageIdUseCase
 import com.wire.kalium.logic.feature.session.CurrentSessionResult
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.scan
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -48,13 +57,14 @@ class ConversationAudioMessagePlayerProvider
     private val audioMediaPlayer: MediaPlayer,
     private val wavesMaskHelper: AudioWavesMaskHelper,
     @KaliumCoreLogic private val coreLogic: CoreLogic,
+    @ApplicationScope private val scope: CoroutineScope
 ) {
     private var player: ConversationAudioMessagePlayer? = null
     private var usageCount: Int = 0
 
     @Synchronized
     fun provide(): ConversationAudioMessagePlayer {
-        val player = player ?: ConversationAudioMessagePlayer(context, audioMediaPlayer, wavesMaskHelper, coreLogic).also {
+        val player = player ?: ConversationAudioMessagePlayer(context, audioMediaPlayer, wavesMaskHelper, coreLogic, scope).also {
             player = it
         }
         usageCount++
@@ -79,6 +89,7 @@ internal constructor(
     private val audioMediaPlayer: MediaPlayer,
     private val wavesMaskHelper: AudioWavesMaskHelper,
     @KaliumCoreLogic private val coreLogic: CoreLogic,
+    @ApplicationScope private val scope: CoroutineScope
 ) {
     private companion object {
         const val UPDATE_POSITION_INTERVAL_IN_MS = 100L
@@ -89,14 +100,20 @@ internal constructor(
             if (currentAudioMessageId != null) {
                 audioMessageStateUpdate.tryEmit(
                     AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(
-                        currentAudioMessageId!!,
+                        currentAudioMessageId!!.conversationId,
+                        currentAudioMessageId!!.messageId,
                         AudioMediaPlayingState.Completed
                     )
                 )
                 seekToAudioPosition.tryEmit(currentAudioMessageId!! to 0)
+
+                tryToPlayNextAudio()
             }
         }
     }
+
+    private var audioMessageStateHistory: Map<MessageIdWrapper, AudioState> = emptyMap()
+    private var currentAudioMessageId: MessageIdWrapper? = null
 
     private val audioMessageStateUpdate =
         MutableSharedFlow<AudioMediaPlayerStateUpdate>(
@@ -110,41 +127,56 @@ internal constructor(
         replay = 1
     )
 
-    // MediaPlayer API does not have any mechanism that would inform as about the currentPosition,
-    // in a callback manner, therefore we need to create a timer manually that ticks every 1 second
-    // and emits the current position
-    private val mediaPlayerPosition = flow {
-        delay(UPDATE_POSITION_INTERVAL_IN_MS)
-        while (true) {
-            if (audioMediaPlayer.isPlaying) {
-                emit(currentAudioMessageId to audioMediaPlayer.currentPosition)
-            }
-            delay(UPDATE_POSITION_INTERVAL_IN_MS)
-        }
-    }.distinctUntilChanged()
-
     private val seekToAudioPosition =
-        MutableSharedFlow<Pair<String, Int>>(
+        MutableSharedFlow<Pair<MessageIdWrapper, Int>>(
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
             extraBufferCapacity = 1
         )
 
+    private val positionCheckTrigger = MutableSharedFlow<Unit>()
+
+    // MediaPlayer API does not have any mechanism that would inform as about the currentPosition,
+    // in a callback manner, therefore we need to create a timer manually that ticks every UPDATE_POSITION_INTERVAL_IN_MS
+    // and emits the current position
+    private val mediaPlayerPosition = positionCheckTrigger
+        .map {
+            currentAudioMessageId?.let {
+                audioMessageStateHistory[it]?.let { state -> state.isPlaying() }
+            } ?: false
+        }
+        .distinctUntilChanged()
+        .flatMapLatest { isAnythingPlaying ->
+            if (isAnythingPlaying) {
+                intervalFlow(UPDATE_POSITION_INTERVAL_IN_MS)
+                    .map {
+                        if (audioMediaPlayer.isPlaying) {
+                            currentAudioMessageId to audioMediaPlayer.currentPosition
+                        } else {
+                            null
+                        }
+                    }.filterNotNull()
+            } else {
+                // no need for tick-tack checking if there on playing message
+                emptyFlow<Pair<MessageIdWrapper, Int>>()
+            }
+        }
+
     private val positionChangedUpdate = merge(mediaPlayerPosition, seekToAudioPosition)
         .map { (messageId, position) ->
             messageId?.let {
-                AudioMediaPlayerStateUpdate.PositionChangeUpdate(it, position)
+                AudioMediaPlayerStateUpdate.PositionChangeUpdate(it.conversationId, it.messageId, position)
             }
         }.filterNotNull()
-
-    private var audioMessageStateHistory: Map<String, AudioState> = emptyMap()
 
     // Flow collecting the audio message state updates as well as the audio message position
     // updates, the collected values are then put into the map holding the state for each individual audio message.
     // The audio message position can be either updated by the user manually by for example a Slider component or by the player itself.
-    val observableAudioMessagesState: Flow<Map<String, AudioState>> =
+    val observableAudioMessagesState: Flow<Map<MessageIdWrapper, AudioState>> =
         merge(positionChangedUpdate, audioMessageStateUpdate).map { audioMessageStateUpdate ->
+            val messageIdKey =
+                MessageIdWrapper(audioMessageStateUpdate.conversationId, audioMessageStateUpdate.messageId)
             val currentState = audioMessageStateHistory.getOrDefault(
-                audioMessageStateUpdate.messageId,
+                messageIdKey,
                 AudioState.DEFAULT
             )
 
@@ -152,16 +184,17 @@ internal constructor(
                 is AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate -> {
                     audioMessageStateHistory = audioMessageStateHistory.toMutableMap().apply {
                         put(
-                            audioMessageStateUpdate.messageId,
+                            messageIdKey,
                             currentState.copy(audioMediaPlayingState = audioMessageStateUpdate.audioMediaPlayingState)
                         )
                     }
+                    positionCheckTrigger.emit(Unit)
                 }
 
                 is AudioMediaPlayerStateUpdate.PositionChangeUpdate -> {
                     audioMessageStateHistory = audioMessageStateHistory.toMutableMap().apply {
                         put(
-                            audioMessageStateUpdate.messageId,
+                            messageIdKey,
                             currentState.copy(currentPositionInMs = audioMessageStateUpdate.position)
                         )
                     }
@@ -170,7 +203,7 @@ internal constructor(
                 is AudioMediaPlayerStateUpdate.TotalTimeUpdate -> {
                     audioMessageStateHistory = audioMessageStateHistory.toMutableMap().apply {
                         put(
-                            audioMessageStateUpdate.messageId,
+                            messageIdKey,
                             currentState.copy(
                                 totalTimeInMs = AudioState.TotalTimeInMs.Known(audioMessageStateUpdate.totalTimeInMs)
                             )
@@ -181,7 +214,7 @@ internal constructor(
                 is AudioMediaPlayerStateUpdate.WaveMaskUpdate -> {
                     audioMessageStateHistory = audioMessageStateHistory.toMutableMap().apply {
                         put(
-                            audioMessageStateUpdate.messageId,
+                            messageIdKey,
                             currentState.copy(wavesMask = audioMessageStateUpdate.waveMask)
                         )
                     }
@@ -189,25 +222,60 @@ internal constructor(
             }
 
             audioMessageStateHistory
-        }.onStart { emit(audioMessageStateHistory) }
+        }.shareIn(scope, SharingStarted.WhileSubscribed(), 1)
+            .onStart { emit(audioMessageStateHistory) }
+
+    // Flow contains currently playing or last paused Audio message date.
+    // If there is such a message state is PlayingAudioMessageState.Some,
+    // PlayingAudioMessageState.None otherwise
+    val playingAudioMessageFlow: Flow<PlayingAudioMessage> = observableAudioMessagesState
+        .scan(PlayingAudioMessage.None as PlayingAudioMessage) { prevState, statesHistory ->
+            val currentMessageId = currentAudioMessageId
+            val state = currentMessageId?.let { statesHistory[it] }
+
+            when {
+                (state?.isPlayingOrPaused() != true) -> PlayingAudioMessage.None
+
+                (prevState is PlayingAudioMessage.Some && prevState.messageId == currentMessageId.messageId) ->
+                    // no need to request Sender name if we already have it
+                    PlayingAudioMessage.Some(
+                        conversationId = currentMessageId.conversationId,
+                        messageId = currentMessageId.messageId,
+                        authorName = prevState.authorName,
+                        state = state
+                    )
+
+                else -> {
+                    val authorName = getSenderNameByMessageId(currentMessageId.conversationId, currentMessageId.messageId)
+                        ?.let { UIText.DynamicString(it) }
+                        ?: UIText.StringResource(R.string.username_unavailable_label)
+
+                    PlayingAudioMessage.Some(
+                        conversationId = currentMessageId.conversationId,
+                        messageId = currentMessageId.messageId,
+                        authorName = authorName,
+                        state = state,
+                    )
+                }
+            }
+        }
+        .shareIn(scope, SharingStarted.WhileSubscribed(), 1)
 
     val audioSpeed: Flow<AudioSpeed> = _audioSpeed.onStart { emit(AudioSpeed.NORMAL) }
-
-    private var currentAudioMessageId: String? = null
 
     suspend fun playAudio(
         conversationId: ConversationId,
         requestedAudioMessageId: String
     ) {
-        val isRequestedAudioMessageCurrentlyPlaying = currentAudioMessageId == requestedAudioMessageId
+        val isRequestedAudioMessageCurrentlyPlaying = currentAudioMessageId == MessageIdWrapper(conversationId, requestedAudioMessageId)
         if (isRequestedAudioMessageCurrentlyPlaying) {
-            resumeOrPauseCurrentlyPlayingAudioMessage(requestedAudioMessageId)
+            resumeOrPauseCurrentlyPlayingAudioMessage(conversationId, requestedAudioMessageId)
         } else {
             stopCurrentlyPlayingAudioMessage()
             playAudioMessage(
                 conversationId = conversationId,
                 messageId = requestedAudioMessageId,
-                position = previouslyResumedPosition(requestedAudioMessageId)
+                position = previouslyResumedPosition(conversationId, requestedAudioMessageId)
             )
         }
     }
@@ -218,8 +286,8 @@ internal constructor(
         updateSpeedFlow()
     }
 
-    private fun previouslyResumedPosition(requestedAudioMessageId: String): Int? {
-        return audioMessageStateHistory[requestedAudioMessageId]?.run {
+    private fun previouslyResumedPosition(conversationId: ConversationId, requestedAudioMessageId: String): Int? {
+        return audioMessageStateHistory[MessageIdWrapper(conversationId, requestedAudioMessageId)]?.run {
             if (audioMediaPlayingState == AudioMediaPlayingState.Completed) {
                 0
             } else {
@@ -228,20 +296,20 @@ internal constructor(
         }
     }
 
-    private suspend fun stopCurrentlyPlayingAudioMessage() {
+    suspend fun stopCurrentlyPlayingAudioMessage() {
         currentAudioMessageId?.let {
             val currentAudioState = audioMessageStateHistory[it]
             if (currentAudioState?.audioMediaPlayingState != AudioMediaPlayingState.Fetching) {
-                stop(it)
+                stop(it.conversationId, it.messageId)
             }
         }
     }
 
-    private suspend fun resumeOrPauseCurrentlyPlayingAudioMessage(messageId: String) {
+    suspend fun resumeOrPauseCurrentlyPlayingAudioMessage(conversationId: ConversationId, messageId: String) {
         if (audioMediaPlayer.isPlaying) {
-            pause(messageId)
+            pause(conversationId, messageId)
         } else {
-            resumeAudio(messageId)
+            resumeAudio(conversationId, messageId)
         }
     }
 
@@ -250,79 +318,85 @@ internal constructor(
         messageId: String,
         position: Int? = null
     ) {
-        currentAudioMessageId = messageId
+        currentAudioMessageId = MessageIdWrapper(conversationId, messageId)
 
-        coroutineScope {
-            launch {
-                val currentAccountResult = coreLogic.getGlobalScope().session.currentSession()
-                if (currentAccountResult is CurrentSessionResult.Failure) return@launch
+        val currentAccountResult = coreLogic.getGlobalScope().session.currentSession()
+        if (currentAccountResult is CurrentSessionResult.Failure) return
 
+        audioMessageStateUpdate.emit(
+            AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(conversationId, messageId, AudioMediaPlayingState.Fetching)
+        )
+
+        val assetMessage = getAssetMessage(currentAccountResult, conversationId, messageId)
+
+        when (val result = assetMessage.await()) {
+            is MessageAssetResult.Success -> {
                 audioMessageStateUpdate.emit(
-                    AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(messageId, AudioMediaPlayingState.Fetching)
+                    AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(
+                        conversationId,
+                        messageId,
+                        AudioMediaPlayingState.SuccessfulFetching
+                    )
                 )
 
-                val assetMessage = getAssetMessage(currentAccountResult, conversationId, messageId)
+                val isFetchedAudioCurrentlyQueuedToPlay = MessageIdWrapper(conversationId, messageId) == currentAudioMessageId
 
-                when (val result = assetMessage.await()) {
-                    is MessageAssetResult.Success -> {
-                        audioMessageStateUpdate.emit(
-                            AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(
-                                messageId,
-                                AudioMediaPlayingState.SuccessfulFetching
-                            )
+                if (isFetchedAudioCurrentlyQueuedToPlay) {
+                    audioMediaPlayer.setDataSource(context, Uri.parse(result.decodedAssetPath.toString()))
+                    audioMediaPlayer.prepare()
+
+                    audioMessageStateUpdate.emit(
+                        AudioMediaPlayerStateUpdate.WaveMaskUpdate(
+                            conversationId,
+                            messageId,
+                            wavesMaskHelper.getWaveMask(result.decodedAssetPath)
                         )
+                    )
 
-                        val isFetchedAudioCurrentlyQueuedToPlay = messageId == currentAudioMessageId
+                    if (position != null) audioMediaPlayer.seekTo(position)
 
-                        if (isFetchedAudioCurrentlyQueuedToPlay) {
-                            audioMediaPlayer.setDataSource(context, Uri.parse(result.decodedAssetPath.toString()))
-                            audioMediaPlayer.prepare()
+                    audioMediaPlayer.start()
 
-                            audioMessageStateUpdate.emit(
-                                AudioMediaPlayerStateUpdate.WaveMaskUpdate(
-                                    messageId,
-                                    wavesMaskHelper.getWaveMask(result.decodedAssetPath)
-                                )
-                            )
+                    updateSpeedFlow()
 
-                            if (position != null) audioMediaPlayer.seekTo(position)
-
-                            audioMediaPlayer.start()
-
-                            updateSpeedFlow()
-
-                            audioMessageStateUpdate.emit(
-                                AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(messageId, AudioMediaPlayingState.Playing)
-                            )
-
-                            audioMessageStateUpdate.emit(
-                                AudioMediaPlayerStateUpdate.TotalTimeUpdate(messageId, audioMediaPlayer.duration)
-                            )
-                        }
-                    }
-
-                    is MessageAssetResult.Failure -> {
-                        audioMessageStateUpdate.emit(
-                            AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(messageId, AudioMediaPlayingState.Failed)
+                    audioMessageStateUpdate.emit(
+                        AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(
+                            conversationId,
+                            messageId,
+                            AudioMediaPlayingState.Playing
                         )
-                    }
+                    )
+
+                    audioMessageStateUpdate.emit(
+                        AudioMediaPlayerStateUpdate.TotalTimeUpdate(conversationId, messageId, audioMediaPlayer.duration)
+                    )
                 }
+            }
+
+            is MessageAssetResult.Failure -> {
+                audioMessageStateUpdate.emit(
+                    AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(
+                        conversationId,
+                        messageId,
+                        AudioMediaPlayingState.Failed
+                    )
+                )
             }
         }
     }
 
-    suspend fun setPosition(messageId: String, position: Int) {
-        val currentAudioState = audioMessageStateHistory[messageId]
+    suspend fun setPosition(conversationId: ConversationId, messageId: String, position: Int) {
+        val currentAudioState = audioMessageStateHistory[MessageIdWrapper(conversationId, messageId)]
 
         if (currentAudioState != null) {
-            val isAudioMessageCurrentlyPlaying = currentAudioMessageId == messageId
+            val isAudioMessageCurrentlyPlaying = currentAudioMessageId == MessageIdWrapper(conversationId, messageId)
 
             if (isAudioMessageCurrentlyPlaying) {
                 audioMediaPlayer.seekTo(position.toLong(), SEEK_CLOSEST_SYNC)
             }
         }
 
-        seekToAudioPosition.emit(messageId to position)
+        seekToAudioPosition.emit(MessageIdWrapper(conversationId, messageId) to position)
     }
 
     suspend fun fetchWavesMask(conversationId: ConversationId, messageId: String) {
@@ -338,6 +412,7 @@ internal constructor(
         if (result is MessageAssetResult.Success) {
             audioMessageStateUpdate.emit(
                 AudioMediaPlayerStateUpdate.WaveMaskUpdate(
+                    conversationId,
                     messageId,
                     wavesMaskHelper.getWaveMask(result.decodedAssetPath)
                 )
@@ -354,28 +429,28 @@ internal constructor(
         .messages
         .getAssetMessage(conversationId, messageId)
 
-    private suspend fun resumeAudio(messageId: String) {
+    private suspend fun resumeAudio(conversationId: ConversationId, messageId: String) {
         audioMediaPlayer.start()
         updateSpeedFlow()
 
         audioMessageStateUpdate.emit(
-            AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(messageId, AudioMediaPlayingState.Playing)
+            AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(conversationId, messageId, AudioMediaPlayingState.Playing)
         )
     }
 
-    private suspend fun pause(messageId: String) {
+    private suspend fun pause(conversationId: ConversationId, messageId: String) {
         audioMediaPlayer.pause()
 
         audioMessageStateUpdate.emit(
-            AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(messageId, AudioMediaPlayingState.Paused)
+            AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(conversationId, messageId, AudioMediaPlayingState.Paused)
         )
     }
 
-    private suspend fun stop(messageId: String) {
+    private suspend fun stop(conversationId: ConversationId, messageId: String) {
         audioMediaPlayer.reset()
 
         audioMessageStateUpdate.emit(
-            AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(messageId, AudioMediaPlayingState.Stopped)
+            AudioMediaPlayerStateUpdate.AudioMediaPlayingStateUpdate(conversationId, messageId, AudioMediaPlayingState.Stopped)
         )
     }
 
@@ -384,8 +459,41 @@ internal constructor(
         _audioSpeed.emit(currentSpeed)
     }
 
+    private fun tryToPlayNextAudio() {
+        scope.launch {
+            currentAudioMessageId?.let { (conversationId, currentMessageId) ->
+                val currentAccountResult = coreLogic.getGlobalScope().session.currentSession()
+                if (currentAccountResult is CurrentSessionResult.Failure) return@launch
+
+                val nextAudio = coreLogic
+                    .getSessionScope((currentAccountResult as CurrentSessionResult.Success).accountInfo.userId)
+                    .messages
+                    .getNextAudioMessageInConversation(conversationId, currentMessageId)
+
+                if (nextAudio is GetNextAudioMessageInConversationUseCase.Result.Success) {
+                    stop(conversationId, currentMessageId)
+                    playAudioMessage(conversationId, nextAudio.messageId)
+                }
+            }
+        }
+    }
+
+    private suspend fun getSenderNameByMessageId(conversationId: ConversationId, messageId: String): String? {
+        val currentAccountResult = coreLogic.getGlobalScope().session.currentSession()
+        if (currentAccountResult is CurrentSessionResult.Failure) return null
+
+        val senderNameResult = coreLogic
+            .getSessionScope((currentAccountResult as CurrentSessionResult.Success).accountInfo.userId)
+            .messages
+            .getSenderNameByMessageId(conversationId, messageId)
+
+        return if (senderNameResult is GetSenderNameByMessageIdUseCase.Result.Success) senderNameResult.name else null
+    }
+
     internal fun close() {
         audioMediaPlayer.reset()
         wavesMaskHelper.clear()
     }
+
+    data class MessageIdWrapper(val conversationId: ConversationId, val messageId: String)
 }

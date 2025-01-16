@@ -83,7 +83,7 @@ class RecordAudioViewModel @Inject constructor(
 
     fun setApplyEffectsAndPlayAudio(enabled: Boolean) {
         setShouldApplyEffects(enabled = enabled)
-        if (state.audioState.audioMediaPlayingState is AudioMediaPlayingState.Playing) {
+        if (state.audioState.isPlaying()) {
             onPlayAudio()
         }
     }

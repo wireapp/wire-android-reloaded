@@ -21,6 +21,7 @@ package com.wire.android.ui.home.conversations.messages
 import androidx.paging.PagingData
 import com.wire.android.media.audiomessage.AudioSpeed
 import com.wire.android.media.audiomessage.AudioState
+import com.wire.android.media.audiomessage.PlayingAudioMessage
 import com.wire.android.ui.home.conversations.model.AssetBundle
 import com.wire.android.ui.home.conversations.model.UIMessage
 import com.wire.kalium.logic.data.message.MessageAssetStatus
@@ -43,13 +44,7 @@ data class ConversationMessagesViewState(
 data class AudioMessagesState(
     val audioStates: PersistentMap<String, AudioState> = persistentMapOf(),
     val audioSpeed: AudioSpeed = AudioSpeed.NORMAL,
-    val playingAudiMessage: PlayingAudiMessage? = null
-)
-
-data class PlayingAudiMessage(
-    val messageId: String,
-    val authorName: String,
-    val currentTimeMs: Int
+    val playingAudiMessage: PlayingAudioMessage = PlayingAudioMessage.None
 )
 
 sealed class DownloadedAssetDialogVisibilityState {

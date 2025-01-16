@@ -17,6 +17,8 @@
  */
 package com.wire.android.mapper
 
+import com.wire.android.media.audiomessage.AudioMediaPlayingState
+import com.wire.android.media.audiomessage.PlayingAudioMessage
 import com.wire.android.model.ImageAsset.UserAvatarAsset
 import com.wire.android.model.NameBasedAvatar
 import com.wire.android.model.UserAvatarData
@@ -25,7 +27,9 @@ import com.wire.android.ui.home.conversationslist.model.BadgeEventType
 import com.wire.android.ui.home.conversationslist.model.BlockState
 import com.wire.android.ui.home.conversationslist.model.ConversationInfo
 import com.wire.android.ui.home.conversationslist.model.ConversationItem
+import com.wire.android.ui.home.conversationslist.model.PlayingAudioInConversation
 import com.wire.android.ui.home.conversationslist.showLegalHoldIndicator
+import com.wire.kalium.logic.data.conversation.ConversationDetails
 import com.wire.kalium.logic.data.conversation.ConversationDetails.Connection
 import com.wire.kalium.logic.data.conversation.ConversationDetails.Group
 import com.wire.kalium.logic.data.conversation.ConversationDetails.OneOne
@@ -42,7 +46,8 @@ import com.wire.kalium.logic.data.user.UserAvailabilityStatus
 fun ConversationDetailsWithEvents.toConversationItem(
     userTypeMapper: UserTypeMapper,
     searchQuery: String,
-    selfUserTeamId: TeamId?
+    selfUserTeamId: TeamId?,
+    playingAudioMessage: PlayingAudioMessage
 ): ConversationItem = when (val conversationDetails = this.conversationDetails) {
     is Group -> {
         ConversationItem.GroupConversation(
@@ -66,7 +71,8 @@ fun ConversationDetailsWithEvents.toConversationItem(
             hasNewActivitiesToShow = hasNewActivitiesToShow,
             searchQuery = searchQuery,
             isFavorite = conversationDetails.isFavorite,
-            folder = conversationDetails.folder
+            folder = conversationDetails.folder,
+            playingAudio = getPlayingAudioInConversation(playingAudioMessage, conversationDetails)
         )
     }
 
@@ -105,7 +111,8 @@ fun ConversationDetailsWithEvents.toConversationItem(
             hasNewActivitiesToShow = hasNewActivitiesToShow,
             searchQuery = searchQuery,
             isFavorite = conversationDetails.isFavorite,
-            folder = conversationDetails.folder
+            folder = conversationDetails.folder,
+            playingAudio = getPlayingAudioInConversation(playingAudioMessage, conversationDetails)
         )
     }
 
@@ -141,6 +148,25 @@ fun ConversationDetailsWithEvents.toConversationItem(
         throw IllegalArgumentException("$this conversations should not be visible to the user.")
     }
 }
+
+private fun getPlayingAudioInConversation(
+    playingAudioMessage: PlayingAudioMessage,
+    conversationDetails: ConversationDetails
+): PlayingAudioInConversation? =
+    if (playingAudioMessage is PlayingAudioMessage.Some
+        && playingAudioMessage.conversationId == conversationDetails.conversation.id
+    ) {
+        if (playingAudioMessage.state.isPlaying()) {
+            PlayingAudioInConversation(playingAudioMessage.messageId, false)
+        } else if (playingAudioMessage.state.audioMediaPlayingState is AudioMediaPlayingState.Paused) {
+            PlayingAudioInConversation(playingAudioMessage.messageId, true)
+        } else {
+            // states Fetching, Completed, Stopped, etc. should not be shown in ConversationItem
+            null
+        }
+    } else {
+        null
+    }
 
 private fun parseConnectionEventType(connectionState: ConnectionState) =
     if (connectionState == ConnectionState.SENT) {

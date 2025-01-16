@@ -32,6 +32,9 @@ import com.wire.android.framework.TestConversationDetails
 import com.wire.android.framework.TestConversationItem
 import com.wire.android.framework.TestUser
 import com.wire.android.mapper.UserTypeMapper
+import com.wire.android.media.audiomessage.ConversationAudioMessagePlayer
+import com.wire.android.media.audiomessage.ConversationAudioMessagePlayerProvider
+import com.wire.android.media.audiomessage.PlayingAudioMessage
 import com.wire.android.ui.common.dialogs.BlockUserDialogState
 import com.wire.android.ui.home.conversations.usecase.GetConversationsFromSearchUseCase
 import com.wire.android.ui.home.conversationslist.model.ConversationItem
@@ -60,6 +63,7 @@ import com.wire.kalium.logic.feature.user.GetSelfUserUseCase
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -352,6 +356,12 @@ class ConversationListViewModelTest {
         @MockK
         private lateinit var workManager: WorkManager
 
+        @MockK
+        lateinit var audioMessagePlayer: ConversationAudioMessagePlayer
+
+        @MockK
+        lateinit var audioMessagePlayerProvider: ConversationAudioMessagePlayerProvider
+
         init {
             MockKAnnotations.init(this, relaxUnitFun = true)
             withConversationsPaginated(listOf(TestConversationItem.CONNECTION, TestConversationItem.PRIVATE, TestConversationItem.GROUP))
@@ -367,6 +377,9 @@ class ConversationListViewModelTest {
                     )
                 }
             )
+            every { audioMessagePlayerProvider.provide() } returns audioMessagePlayer
+            every { audioMessagePlayerProvider.onCleared() } returns Unit
+            every { audioMessagePlayer.playingAudioMessageFlow } returns flowOf(PlayingAudioMessage.None)
             mockUri()
         }
 
@@ -426,6 +439,7 @@ class ConversationListViewModelTest {
             userTypeMapper = UserTypeMapper(),
             observeSelfUser = observeSelfUser,
             usePagination = true,
+            audioMessagePlayerProvider = audioMessagePlayerProvider,
             workManager = workManager
         )
     }

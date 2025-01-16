@@ -29,17 +29,18 @@ import com.wire.android.framework.TestMessage.GENERIC_ASSET_CONTENT
 import com.wire.android.media.audiomessage.AudioMediaPlayingState
 import com.wire.android.media.audiomessage.AudioSpeed
 import com.wire.android.media.audiomessage.AudioState
+import com.wire.android.media.audiomessage.ConversationAudioMessagePlayer.MessageIdWrapper
+import com.wire.android.media.audiomessage.PlayingAudioMessage
 import com.wire.android.ui.home.conversations.ConversationSnackbarMessages
 import com.wire.android.ui.home.conversations.composer.mockUIAudioMessage
 import com.wire.android.ui.home.conversations.composer.mockUITextMessage
 import com.wire.android.ui.home.conversations.delete.DeleteMessageDialogActiveState
 import com.wire.android.ui.home.conversations.delete.DeleteMessageDialogsState
-import com.wire.kalium.logic.CoreFailure
+import com.wire.android.util.ui.UIText
 import com.wire.kalium.logic.StorageFailure
 import com.wire.kalium.logic.data.message.MessageContent
 import com.wire.kalium.logic.data.user.UserId
 import com.wire.kalium.logic.feature.conversation.GetConversationUnreadEventsCountUseCase
-import com.wire.kalium.logic.feature.message.GetSenderNameByMessageIdUseCase
 import io.mockk.coVerify
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentMapOf
@@ -331,67 +332,32 @@ class ConversationMessagesViewModelTest {
     }
 
     @Test
-    fun `given an message ID, when some Audio is played, then should get message sender name by message ID`() = runTest {
+    fun `given an message ID, when some Audio is played, then state contains it`() = runTest {
         val message = TestMessage.ASSET_MESSAGE
         val audioState = AudioState.DEFAULT.copy(
             audioMediaPlayingState = AudioMediaPlayingState.Playing,
             totalTimeInMs = AudioState.TotalTimeInMs.Known(10000),
             currentPositionInMs = 300
         )
-        val userName = "some name"
-        val expectedAudioMessagesState = AudioMessagesState(
-            audioStates = persistentMapOf(message.id to audioState),
-            audioSpeed = AudioSpeed.NORMAL,
-            playingAudiMessage = PlayingAudiMessage(
-                messageId = message.id,
-                authorName = userName,
-                currentTimeMs = audioState.currentPositionInMs
-            )
-        )
-        val (arrangement, viewModel) = ConversationMessagesViewModelArrangement()
-            .withSuccessfulViewModelInit()
-            .withGetSenderNameByMessageId(GetSenderNameByMessageIdUseCase.Result.Success(userName))
-            .withObservableAudioMessagesState(
-                flowOf(
-                    mapOf(
-                        message.id to audioState.copy(currentPositionInMs = 100),
-                        message.id to audioState
-                    )
-                )
-            )
-            .arrange()
-
-        advanceUntilIdle()
-
-        coVerify(exactly = 1) { arrangement.getSenderNameByMessageId(arrangement.conversationId, message.id) }
-        assertEquals(expectedAudioMessagesState, viewModel.conversationViewState.audioMessagesState)
-    }
-
-    @Test
-    fun `given an message ID, when getSenderNameByMessageId fails, then senderName in PlayingAudiMessage is empty`() = runTest {
-        val message = TestMessage.ASSET_MESSAGE
-        val audioState = AudioState.DEFAULT.copy(
-            audioMediaPlayingState = AudioMediaPlayingState.Playing,
-            totalTimeInMs = AudioState.TotalTimeInMs.Known(10000),
-            currentPositionInMs = 300
+        val playingAudiMessage = PlayingAudioMessage.Some(
+            conversationId = message.conversationId,
+            messageId = message.id,
+            authorName = UIText.DynamicString("some name"),
+            state = AudioState.DEFAULT.copy(currentPositionInMs = audioState.currentPositionInMs)
         )
         val expectedAudioMessagesState = AudioMessagesState(
             audioStates = persistentMapOf(message.id to audioState),
             audioSpeed = AudioSpeed.NORMAL,
-            playingAudiMessage = PlayingAudiMessage(
-                messageId = message.id,
-                authorName = "",
-                currentTimeMs = audioState.currentPositionInMs
-            )
+            playingAudiMessage = playingAudiMessage
         )
         val (arrangement, viewModel) = ConversationMessagesViewModelArrangement()
             .withSuccessfulViewModelInit()
-            .withGetSenderNameByMessageId(GetSenderNameByMessageIdUseCase.Result.Failure(CoreFailure.Unknown(null)))
+            .withPlayingAudioMessageFlow(flowOf(playingAudiMessage))
             .withObservableAudioMessagesState(
                 flowOf(
                     mapOf(
-                        message.id to audioState.copy(currentPositionInMs = 100),
-                        message.id to audioState
+                        MessageIdWrapper(message.conversationId, message.id) to audioState.copy(currentPositionInMs = 100),
+                        MessageIdWrapper(message.conversationId, message.id) to audioState
                     )
                 )
             )
@@ -403,7 +369,7 @@ class ConversationMessagesViewModelTest {
     }
 
     @Test
-    fun `given an message ID, when no playing Audio message, then PlayingAudiMessage is null`() = runTest {
+    fun `given an message ID, when no playing Audio message, then PlayingAudioMessage is None`() = runTest {
         val message = TestMessage.ASSET_MESSAGE
         val audioState = AudioState.DEFAULT.copy(
             audioMediaPlayingState = AudioMediaPlayingState.Stopped,
@@ -413,16 +379,16 @@ class ConversationMessagesViewModelTest {
         val expectedAudioMessagesState = AudioMessagesState(
             audioStates = persistentMapOf(message.id to audioState),
             audioSpeed = AudioSpeed.NORMAL,
-            playingAudiMessage = null
+            playingAudiMessage = PlayingAudioMessage.None
         )
         val (arrangement, viewModel) = ConversationMessagesViewModelArrangement()
             .withSuccessfulViewModelInit()
-            .withObservableAudioMessagesState(flowOf(mapOf(message.id to audioState)))
+            .withPlayingAudioMessageFlow(flowOf(PlayingAudioMessage.None))
+            .withObservableAudioMessagesState(flowOf(mapOf(MessageIdWrapper(message.conversationId, message.id) to audioState)))
             .arrange()
 
         advanceUntilIdle()
 
-        coVerify(exactly = 0) { arrangement.getSenderNameByMessageId(arrangement.conversationId, message.id) }
         assertEquals(expectedAudioMessagesState, viewModel.conversationViewState.audioMessagesState)
     }
 }

@@ -15,10 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
+@file:Suppress("TooManyFunctions")
 
 package com.wire.android.ui.home.conversationslist.common
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -27,11 +30,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import com.wire.android.R
 import com.wire.android.model.Clickable
@@ -49,9 +57,11 @@ import com.wire.android.ui.home.conversationslist.model.BadgeEventType
 import com.wire.android.ui.home.conversationslist.model.BlockingState
 import com.wire.android.ui.home.conversationslist.model.ConversationInfo
 import com.wire.android.ui.home.conversationslist.model.ConversationItem
+import com.wire.android.ui.home.conversationslist.model.PlayingAudioInConversation
 import com.wire.android.ui.home.conversationslist.model.toUserInfoLabel
 import com.wire.android.ui.markdown.MarkdownConstants
 import com.wire.android.ui.theme.WireTheme
+import com.wire.android.ui.theme.wireColorScheme
 import com.wire.android.util.ui.PreviewMultipleThemes
 import com.wire.android.util.ui.UIText
 import com.wire.android.util.ui.toUIText
@@ -72,7 +82,9 @@ fun ConversationItemFactory(
     openMenu: (ConversationItem) -> Unit = {},
     openUserProfile: (UserId) -> Unit = {},
     joinCall: (ConversationId) -> Unit = {},
-    onAudioPermissionPermanentlyDenied: () -> Unit = {}
+    onAudioPermissionPermanentlyDenied: () -> Unit = {},
+    onPlayPauseCurrentAudio: (conversationId: ConversationId, messageId: String) -> Unit = { _, _ -> },
+    onStopCurrentAudio: () -> Unit = {}
 ) {
     val openConversationOptionDescription = stringResource(R.string.content_description_conversation_details_more_btn)
     val openUserProfileDescription = stringResource(R.string.content_description_open_user_profile_label)
@@ -133,7 +145,9 @@ fun ConversationItemFactory(
         onJoinCallClick = {
             joinCall(conversation.conversationId)
         },
-        onAudioPermissionPermanentlyDenied = onAudioPermissionPermanentlyDenied
+        onAudioPermissionPermanentlyDenied = onAudioPermissionPermanentlyDenied,
+        onPlayPauseCurrentAudio = onPlayPauseCurrentAudio,
+        onStopCurrentAudio = onStopCurrentAudio
     )
 }
 
@@ -148,7 +162,9 @@ private fun GeneralConversationItem(
     modifier: Modifier = Modifier,
     selectOnRadioGroup: () -> Unit = {},
     subTitle: @Composable () -> Unit = {},
-    onAudioPermissionPermanentlyDenied: () -> Unit
+    onAudioPermissionPermanentlyDenied: () -> Unit,
+    onPlayPauseCurrentAudio: (conversationId: ConversationId, messageId: String) -> Unit = { _, _ -> },
+    onStopCurrentAudio: () -> Unit = {}
 ) {
     when (conversation) {
         is ConversationItem.GroupConversation -> {
@@ -180,6 +196,12 @@ private fun GeneralConversationItem(
                                 JoinButton(
                                     buttonClick = onJoinCallClick,
                                     onAudioPermissionPermanentlyDenied = onAudioPermissionPermanentlyDenied,
+                                )
+                            } else if (conversation.playingAudio != null) {
+                                AudioControlButtons(
+                                    playingAudio = conversation.playingAudio!!,
+                                    onPlayPauseCurrentAudio = { onPlayPauseCurrentAudio(conversation.conversationId, it) },
+                                    onStopCurrentAudio = onStopCurrentAudio
                                 )
                             } else {
                                 Row(
@@ -222,14 +244,22 @@ private fun GeneralConversationItem(
                     clickable = onConversationItemClick,
                     trailingIcon = {
                         if (!isSelectable) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = dimensions().spacing8x),
-                                horizontalArrangement = Arrangement.spacedBy(dimensions().spacing8x)
-                            ) {
-                                if (mutedStatus != MutedConversationStatus.AllAllowed) {
-                                    MutedConversationBadge()
+                            if (conversation.playingAudio != null) {
+                                AudioControlButtons(
+                                    playingAudio = conversation.playingAudio!!,
+                                    onPlayPauseCurrentAudio = { onPlayPauseCurrentAudio(conversation.conversationId, it) },
+                                    onStopCurrentAudio = onStopCurrentAudio
+                                )
+                            } else {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = dimensions().spacing8x),
+                                    horizontalArrangement = Arrangement.spacedBy(dimensions().spacing8x)
+                                ) {
+                                    if (mutedStatus != MutedConversationStatus.AllAllowed) {
+                                        MutedConversationBadge()
+                                    }
+                                    EventBadgeFactory(eventType = conversation.badgeEventType)
                                 }
-                                EventBadgeFactory(eventType = conversation.badgeEventType)
                             }
                         }
                     }
@@ -259,6 +289,52 @@ private fun GeneralConversationItem(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun AudioControlButtons(
+    playingAudio: PlayingAudioInConversation,
+    modifier: Modifier = Modifier,
+    onPlayPauseCurrentAudio: (messageId: String) -> Unit = {},
+    onStopCurrentAudio: () -> Unit = {}
+) {
+    Row(modifier = modifier.padding(end = dimensions().spacing8x)) {
+        val playPauseIconId = if (playingAudio.isPaused) R.drawable.ic_play else R.drawable.ic_pause
+
+        val leftBtnShape = RoundedCornerShape(topStart = dimensions().corner16x, bottomStart = dimensions().corner16x)
+        val rightBtnShape = RoundedCornerShape(topEnd = dimensions().corner16x, bottomEnd = dimensions().corner16x)
+        Image(
+            painter = painterResource(id = playPauseIconId),
+            contentDescription = null, // TODO
+            modifier = Modifier
+                .clip(leftBtnShape)
+                .clickable(role = Role.Button) { onPlayPauseCurrentAudio(playingAudio.messageId) }
+                .border(
+                    width = dimensions().spacing1x,
+                    shape = leftBtnShape,
+                    color = colorsScheme().secondaryButtonDisabledOutline
+                )
+                .size(dimensions().buttonSmallMinSize)
+                .padding(vertical = dimensions().spacing10x, horizontal = dimensions().spacing14x),
+            colorFilter = ColorFilter.tint(MaterialTheme.wireColorScheme.onSecondaryButtonEnabled)
+        )
+
+        Image(
+            painter = painterResource(id = R.drawable.ic_stop),
+            contentDescription = null, // TODO
+            modifier = Modifier
+                .clip(rightBtnShape)
+                .clickable(role = Role.Button) { onStopCurrentAudio() }
+                .border(
+                    width = dimensions().spacing1x,
+                    shape = rightBtnShape,
+                    color = colorsScheme().secondaryButtonDisabledOutline
+                )
+                .size(dimensions().buttonSmallMinSize)
+                .padding(vertical = dimensions().spacing10x, horizontal = dimensions().spacing14x),
+            colorFilter = ColorFilter.tint(MaterialTheme.wireColorScheme.onSecondaryButtonEnabled)
+        )
     }
 }
 
@@ -323,7 +399,8 @@ fun PreviewGroupConversationItemWithUnreadCount() = WireTheme {
             mlsVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             isFavorite = false,
-            folder = null
+            folder = null,
+            playingAudio = null
         ),
         modifier = Modifier,
         isSelectableItem = false,
@@ -351,7 +428,8 @@ fun PreviewGroupConversationItemWithNoBadges() = WireTheme {
             mlsVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             isFavorite = false,
-            folder = null
+            folder = null,
+            playingAudio = null
         ),
         modifier = Modifier,
         isSelectableItem = false,
@@ -381,7 +459,8 @@ fun PreviewGroupConversationItemWithLastDeletedMessage() = WireTheme {
             mlsVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             isFavorite = false,
-            folder = null
+            folder = null,
+            playingAudio = null
         ),
         modifier = Modifier,
         isSelectableItem = false,
@@ -409,7 +488,8 @@ fun PreviewGroupConversationItemWithMutedBadgeAndUnreadMentionBadge() = WireThem
             mlsVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             isFavorite = false,
-            folder = null
+            folder = null,
+            playingAudio = null
         ),
         modifier = Modifier,
         isSelectableItem = false,
@@ -438,7 +518,8 @@ fun PreviewGroupConversationItemWithOngoingCall() = WireTheme {
             mlsVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             isFavorite = false,
-            folder = null
+            folder = null,
+            playingAudio = null
         ),
         modifier = Modifier,
         isSelectableItem = false,
@@ -523,7 +604,37 @@ fun PreviewPrivateConversationItemWithBlockedBadge() = WireTheme {
             proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
             isFavorite = false,
             isUserDeleted = false,
-            folder = null
+            folder = null,
+            playingAudio = null
+        ),
+        modifier = Modifier,
+        isSelectableItem = false,
+        isChecked = false,
+        {}, {}, {}, {}, {}, {}
+    )
+}
+
+@PreviewMultipleThemes
+@Composable
+fun PreviewPrivateConversationItemWithPlayingAudio() = WireTheme {
+    ConversationItemFactory(
+        conversation = ConversationItem.GroupConversation(
+            "groupName looooooooooooooooooooooooooooooooooooong",
+            conversationId = QualifiedID("value", "domain"),
+            mutedStatus = MutedConversationStatus.OnlyMentionsAndRepliesAllowed,
+            lastMessageContent = UILastMessageContent.TextMessage(
+                MessageBody(UIText.DynamicString("Very looooooooooooooooooooooong messageeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"))
+            ),
+            badgeEventType = BadgeEventType.UnreadMention,
+            selfMemberRole = null,
+            teamId = null,
+            isArchived = false,
+            isFromTheSameTeam = false,
+            mlsVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
+            proteusVerificationStatus = Conversation.VerificationStatus.NOT_VERIFIED,
+            isFavorite = false,
+            folder = null,
+            playingAudio = PlayingAudioInConversation("some_id", true)
         ),
         modifier = Modifier,
         isSelectableItem = false,
