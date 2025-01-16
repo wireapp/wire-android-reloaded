@@ -56,7 +56,6 @@ import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 import com.ramcosta.composedestinations.result.ResultRecipient
 import com.wire.android.R
-import com.wire.android.di.hiltViewModelWithPreview
 import com.wire.android.navigation.BackStackMode
 import com.wire.android.navigation.NavigationCommand
 import com.wire.android.navigation.Navigator
@@ -140,9 +139,9 @@ fun OtherUserProfileScreen(
     ResultRecipient<ConversationFoldersScreenDestination, ConversationFoldersNavBackArgs>,
     viewModel: OtherUserProfileScreenViewModel = hiltViewModel(),
     changeConversationFavoriteViewModel: ChangeConversationFavoriteViewModel =
-        hiltViewModelWithPreview<ChangeConversationFavoriteViewModelImpl, ChangeConversationFavoriteViewModel>(),
+        hiltViewModel<ChangeConversationFavoriteViewModelImpl>(),
     removeConversationFromFolderViewModel: RemoveConversationFromFolderViewModel =
-        hiltViewModelWithPreview<RemoveConversationFromFolderViewModelImpl, RemoveConversationFromFolderViewModel>(),
+        hiltViewModel<RemoveConversationFromFolderViewModelImpl>(),
 ) {
     val snackbarHostState = LocalSnackbarHostState.current
     val context = LocalContext.current

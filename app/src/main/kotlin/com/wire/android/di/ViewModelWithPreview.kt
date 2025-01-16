@@ -32,15 +32,8 @@ import androidx.lifecycle.ViewModel
 @Composable
 inline fun <reified VMI, reified VM> hiltViewModelWithPreview(
     key: String? = null
-): VM where VMI : ViewModel, VMI : VM = when {
-    LocalInspectionMode.current -> ViewModelPreviews.firstNotNullOf { it as? VM }
-    try {
-        Class.forName("androidx.test.espresso.Espresso")
-        true
-    } catch (e: ClassNotFoundException) {
-        false
-    } -> ViewModelPreviews.firstNotNullOf { it as? VM }
-    else -> hiltViewModel<VMI>(key = key)
+): VM where VMI : ViewModel, VMI : VM = getViewModelPreviewOrInject<VM> {
+    hiltViewModel<VMI>(key = key)
 }
 
 /**
@@ -54,7 +47,12 @@ inline fun <reified VMI, reified VM> hiltViewModelWithPreview(
 inline fun <reified VMI, reified VM, reified VMF> hiltViewModelWithPreview(
     key: String? = null,
     noinline creationCallback: (VMF) -> VMI
-): VM where VMI : ViewModel, VMI : VM = when {
+): VM where VMI : ViewModel, VMI : VM = getViewModelPreviewOrInject<VM> {
+    hiltViewModel<VMI, VMF>(key = key, creationCallback = creationCallback)
+}
+
+@Composable
+inline fun <reified VM> getViewModelPreviewOrInject(injectAction: @Composable () -> VM): VM = when {
     LocalInspectionMode.current -> ViewModelPreviews.firstNotNullOf { it as? VM }
     try {
         Class.forName("androidx.test.espresso.Espresso")
@@ -62,7 +60,7 @@ inline fun <reified VMI, reified VM, reified VMF> hiltViewModelWithPreview(
     } catch (e: ClassNotFoundException) {
         false
     } -> ViewModelPreviews.firstNotNullOf { it as? VM }
-    else -> hiltViewModel<VMI, VMF>(key = key, creationCallback = creationCallback)
+    else -> injectAction()
 }
 
 @Target(AnnotationTarget.CLASS)

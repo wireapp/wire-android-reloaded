@@ -59,15 +59,10 @@ fun <R : ScopedArgs> scopedArgs(argsClass: KClass<R>, argsContainer: SavedStateH
 @OptIn(InternalSerializationApi::class)
 @Suppress("BOUNDS_NOT_ALLOWED_IF_BOUNDED_BY_TYPE_PARAMETER")
 @Composable
-inline fun <reified T, reified S, reified R : ScopedArgs> hiltViewModelScoped(arguments: R): S where T : ViewModel, T : S = when {
-    LocalInspectionMode.current -> ViewModelPreviews.firstNotNullOf { it as? S }
-    try {
-        Class.forName("androidx.test.espresso.Espresso")
-        true
-    } catch (e: ClassNotFoundException) {
-        false
-    } -> ViewModelPreviews.firstNotNullOf { it as? S }
-    else -> hiltViewModelScoped<T>(key = arguments.key, defaultArguments = Bundlizer.bundle(R::class.serializer(), arguments))
+inline fun <reified VMI, reified VM, reified ARG : ScopedArgs> hiltViewModelScoped(
+    arguments: ARG
+): VM where VMI : ViewModel, VMI : VM = getViewModelPreviewOrInject<VM> {
+    hiltViewModelScoped<VMI>(key = arguments.key, defaultArguments = Bundlizer.bundle(ARG::class.serializer(), arguments))
 }
 
 /**

@@ -63,7 +63,6 @@ import com.ramcosta.composedestinations.result.ResultBackNavigator
 import com.ramcosta.composedestinations.result.ResultRecipient
 import com.wire.android.R
 import com.wire.android.appLogger
-import com.wire.android.di.hiltViewModelWithPreview
 import com.wire.android.navigation.NavigationCommand
 import com.wire.android.navigation.Navigator
 import com.wire.android.navigation.WireDestination
@@ -147,7 +146,7 @@ fun GroupConversationDetailsScreen(
     viewModel: GroupConversationDetailsViewModel = hiltViewModel(),
     removeConversationFromFolderViewModel: RemoveConversationFromFolderViewModel = hiltViewModel(),
     changeConversationFavoriteStateViewModel: ChangeConversationFavoriteViewModel =
-        hiltViewModel<ChangeConversationFavoriteViewModelImpl, ChangeConversationFavoriteViewModel>(),
+        hiltViewModel<ChangeConversationFavoriteViewModelImpl>(),
 ) {
     val scope = rememberCoroutineScope()
     val resources = LocalContext.current.resources
