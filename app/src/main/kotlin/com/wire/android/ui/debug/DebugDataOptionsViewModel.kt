@@ -26,7 +26,7 @@ import androidx.lifecycle.viewModelScope
 import com.wire.android.datastore.GlobalDataStore
 import com.wire.android.di.CurrentAccount
 import com.wire.android.di.ScopedArgs
-import com.wire.android.di.ViewModelScopedPreview
+import com.wire.android.di.ViewModelPreview
 import com.wire.android.migration.failure.UserMigrationStatus
 import com.wire.android.util.dispatchers.DispatcherProvider
 import com.wire.android.util.getDeviceIdString
@@ -61,7 +61,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
 
-@ViewModelScopedPreview
+@ViewModelPreview
 interface DebugDataOptionsViewModel {
     val infoMessage: SharedFlow<UIText> get() = MutableSharedFlow()
     fun state(): DebugDataOptionsState = DebugDataOptionsState()

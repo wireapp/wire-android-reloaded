@@ -25,7 +25,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wire.android.di.scopedArgs
-import com.wire.android.di.ViewModelScopedPreview
+import com.wire.android.di.ViewModelPreview
 import com.wire.kalium.logic.data.id.ConversationId
 import com.wire.kalium.logic.data.user.UserId
 import com.wire.kalium.logic.feature.conversation.ObserveOtherUserSecurityClassificationLabelUseCase
@@ -35,7 +35,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@ViewModelScopedPreview
+@ViewModelPreview
 interface SecurityClassificationViewModel {
     fun state(): SecurityClassificationType = SecurityClassificationType.NONE
 }

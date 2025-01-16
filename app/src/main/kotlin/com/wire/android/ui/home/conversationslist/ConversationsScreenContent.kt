@@ -27,14 +27,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.wire.android.R
 import com.wire.android.appLogger
-import com.wire.android.di.hiltViewModelScoped
+import com.wire.android.di.hiltViewModelWithPreview
 import com.wire.android.feature.analytics.AnonymousAnalyticsManagerImpl
 import com.wire.android.feature.analytics.model.AnalyticsEvent
 import com.wire.android.navigation.NavigationCommand
@@ -46,9 +44,8 @@ import com.wire.android.ui.common.bottomsheet.WireModalSheetLayout
 import com.wire.android.ui.common.bottomsheet.conversation.ConversationOptionNavigation
 import com.wire.android.ui.common.bottomsheet.conversation.ConversationSheetContent
 import com.wire.android.ui.common.bottomsheet.conversation.rememberConversationSheetState
-import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteStateArgs
-import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteVM
-import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteVMImpl
+import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteViewModel
+import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteViewModelImpl
 import com.wire.android.ui.common.bottomsheet.rememberWireModalSheetState
 import com.wire.android.ui.common.dialogs.ArchiveConversationDialog
 import com.wire.android.ui.common.dialogs.BlockUserDialogContent
@@ -67,9 +64,8 @@ import com.wire.android.ui.home.conversations.details.dialog.ClearConversationCo
 import com.wire.android.ui.home.conversations.details.menu.DeleteConversationGroupDialog
 import com.wire.android.ui.home.conversations.details.menu.DeleteConversationGroupLocallyDialog
 import com.wire.android.ui.home.conversations.details.menu.LeaveConversationGroupDialog
-import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderArgs
-import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderVM
-import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderVMImpl
+import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderViewModel
+import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderViewModelImpl
 import com.wire.android.ui.home.conversationslist.common.ConversationList
 import com.wire.android.ui.home.conversationslist.model.ConversationItem
 import com.wire.android.ui.home.conversationslist.model.ConversationsSource
@@ -94,27 +90,21 @@ fun ConversationsScreenContent(
     lazyListState: LazyListState = rememberLazyListState(),
     loadingListContent: @Composable (LazyListState) -> Unit = { ConversationListLoadingContent(it) },
     conversationsSource: ConversationsSource = ConversationsSource.MAIN,
-    conversationListViewModel: ConversationListViewModel = when {
-        LocalInspectionMode.current -> ConversationListViewModelPreview()
-        else -> hiltViewModel<ConversationListViewModelImpl, ConversationListViewModelImpl.Factory>(
+    conversationListViewModel: ConversationListViewModel =
+        hiltViewModelWithPreview<ConversationListViewModelImpl, ConversationListViewModel, ConversationListViewModelImpl.Factory>(
             key = "list_$conversationsSource",
             creationCallback = { factory ->
                 factory.create(conversationsSource = conversationsSource)
             }
-        )
-    },
-    conversationCallListViewModel: ConversationCallListViewModel = when {
-        LocalInspectionMode.current -> ConversationCallListViewModelPreview
-        else -> hiltViewModel<ConversationCallListViewModelImpl>(key = "call_$conversationsSource")
-    },
-    changeConversationFavoriteStateViewModel: ChangeConversationFavoriteVM =
-        hiltViewModelScoped<ChangeConversationFavoriteVMImpl, ChangeConversationFavoriteVM, ChangeConversationFavoriteStateArgs>(
-            ChangeConversationFavoriteStateArgs
         ),
-    removeConversationFromFolderViewModel: RemoveConversationFromFolderVM =
-        hiltViewModelScoped<RemoveConversationFromFolderVMImpl, RemoveConversationFromFolderVM, RemoveConversationFromFolderArgs>(
-            RemoveConversationFromFolderArgs
-        )
+    conversationCallListViewModel: ConversationCallListViewModel =
+        hiltViewModelWithPreview<ConversationCallListViewModelImpl, ConversationCallListViewModel>(
+            key = "call_$conversationsSource"
+        ),
+    changeConversationFavoriteStateViewModel: ChangeConversationFavoriteViewModel =
+        hiltViewModelWithPreview<ChangeConversationFavoriteViewModelImpl, ChangeConversationFavoriteViewModel>(),
+    removeConversationFromFolderViewModel: RemoveConversationFromFolderViewModel =
+        hiltViewModelWithPreview<RemoveConversationFromFolderViewModelImpl, RemoveConversationFromFolderViewModel>(),
 ) {
     var currentConversationOptionNavigation by remember {
         mutableStateOf<ConversationOptionNavigation>(ConversationOptionNavigation.Home)

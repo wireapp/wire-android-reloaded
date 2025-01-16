@@ -20,6 +20,7 @@ package com.wire.android.ui.home.conversationslist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wire.android.di.ViewModelPreview
 import com.wire.android.ui.common.visbility.VisibilityState
 import com.wire.kalium.logic.data.id.ConversationId
 import com.wire.kalium.logic.data.id.QualifiedID
@@ -33,13 +34,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@ViewModelPreview
 interface ConversationCallListViewModel {
     val joinCallDialogState: VisibilityState<ConversationId> get() = VisibilityState()
     fun joinOngoingCall(conversationId: ConversationId, onJoined: (ConversationId) -> Unit) {}
     fun joinAnyway(conversationId: ConversationId, onJoined: (ConversationId) -> Unit) {}
 }
-
-object ConversationCallListViewModelPreview : ConversationCallListViewModel
 
 @Suppress("MagicNumber", "TooManyFunctions", "LongParameterList")
 @HiltViewModel

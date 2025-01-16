@@ -1,6 +1,6 @@
 /*
  * Wire
- * Copyright (C) 2024 Wire Swiss GmbH
+ * Copyright (C) 2025 Wire Swiss GmbH
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wire.android.R
-import com.wire.android.di.AssistedViewModelFactory
 import com.wire.android.di.ScopedArgs
-import com.wire.android.di.ViewModelScopedPreview
+import com.wire.android.di.ViewModelPreview
 import com.wire.android.util.dispatchers.DispatcherProvider
 import com.wire.android.util.ui.UIText
 import com.wire.kalium.logic.data.conversation.ConversationFolder
@@ -42,8 +41,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
-@ViewModelScopedPreview
-interface MoveConversationToFolderVM {
+@ViewModelPreview
+interface MoveConversationToFolderViewModel {
     val infoMessage: SharedFlow<UIText>
         get() = MutableSharedFlow()
 
@@ -51,18 +50,18 @@ interface MoveConversationToFolderVM {
     fun moveConversationToFolder(folder: ConversationFolder) {}
 }
 
-@HiltViewModel(assistedFactory = MoveConversationToFolderVMImpl.Factory::class)
-class MoveConversationToFolderVMImpl @AssistedInject constructor(
+@HiltViewModel(assistedFactory = MoveConversationToFolderViewModelImpl.Factory::class)
+class MoveConversationToFolderViewModelImpl @AssistedInject constructor(
     private val dispatchers: DispatcherProvider,
     @Assisted val args: MoveConversationToFolderArgs,
     private val moveConversationToFolder: MoveConversationToFolderUseCase,
-) : MoveConversationToFolderVM, ViewModel() {
+) : MoveConversationToFolderViewModel, ViewModel() {
 
     private var state: MoveConversationToFolderState by mutableStateOf(MoveConversationToFolderState())
 
     @AssistedFactory
-    interface Factory : AssistedViewModelFactory<MoveConversationToFolderVMImpl, MoveConversationToFolderArgs> {
-        override fun create(args: MoveConversationToFolderArgs): MoveConversationToFolderVMImpl
+    interface Factory {
+        fun create(args: MoveConversationToFolderArgs): MoveConversationToFolderViewModelImpl
     }
 
     private val _infoMessage = MutableSharedFlow<UIText>()

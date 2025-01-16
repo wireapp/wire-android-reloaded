@@ -24,7 +24,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wire.android.di.ScopedArgs
-import com.wire.android.di.ViewModelScopedPreview
+import com.wire.android.di.ViewModelPreview
 import com.wire.android.di.scopedArgs
 import com.wire.android.ui.home.conversations.usecase.ObserveUsersTypingInConversationUseCase
 import com.wire.kalium.logic.data.id.QualifiedID
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
 
-@ViewModelScopedPreview
+@ViewModelPreview
 interface TypingIndicatorViewModel {
     fun state(): UsersTypingViewState = UsersTypingViewState()
 }

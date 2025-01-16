@@ -26,7 +26,7 @@ import com.wire.android.navigation.WireDestination
 import com.wire.android.navigation.rememberNavigator
 import com.wire.android.ui.common.topappbar.search.rememberSearchbarState
 import com.wire.android.ui.home.HomeStateHolder
-import com.wire.android.ui.home.conversationslist.ConversationListViewModelPreview
+import com.wire.android.ui.home.conversationslist.ConversationListViewModelPaginatedPreview
 import com.wire.android.ui.home.conversationslist.ConversationsScreenContent
 import com.wire.android.ui.home.conversationslist.common.previewConversationFoldersFlow
 import com.wire.android.ui.home.conversationslist.model.ConversationsSource
@@ -56,7 +56,7 @@ fun PreviewArchiveEmptyScreen() = WireTheme {
         searchBarState = rememberSearchbarState(),
         conversationsSource = ConversationsSource.ARCHIVE,
         emptyListContent = { ArchiveEmptyContent() },
-        conversationListViewModel = ConversationListViewModelPreview(previewConversationFoldersFlow(list = listOf())),
+        conversationListViewModel = ConversationListViewModelPaginatedPreview(previewConversationFoldersFlow(list = listOf())),
     )
 }
 
@@ -68,7 +68,9 @@ fun PreviewArchiveEmptySearchScreen() = WireTheme {
         searchBarState = rememberSearchbarState(initialIsSearchActive = true, searchQueryTextState = TextFieldState(initialText = "er")),
         conversationsSource = ConversationsSource.ARCHIVE,
         emptyListContent = { ArchiveEmptyContent() },
-        conversationListViewModel = ConversationListViewModelPreview(previewConversationFoldersFlow(searchQuery = "er", list = listOf())),
+        conversationListViewModel = ConversationListViewModelPaginatedPreview(
+            previewConversationFoldersFlow(searchQuery = "er", list = listOf())
+        ),
     )
 }
 
@@ -80,6 +82,6 @@ fun PreviewArchiveScreen() = WireTheme {
         searchBarState = rememberSearchbarState(initialIsSearchActive = true, searchQueryTextState = TextFieldState(initialText = "er")),
         conversationsSource = ConversationsSource.ARCHIVE,
         emptyListContent = { ArchiveEmptyContent() },
-        conversationListViewModel = ConversationListViewModelPreview(previewConversationFoldersFlow(searchQuery = "er")),
+        conversationListViewModel = ConversationListViewModelPaginatedPreview(previewConversationFoldersFlow(searchQuery = "er")),
     )
 }

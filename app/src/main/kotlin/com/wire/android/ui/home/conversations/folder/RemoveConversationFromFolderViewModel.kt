@@ -1,6 +1,6 @@
 /*
  * Wire
- * Copyright (C) 2024 Wire Swiss GmbH
+ * Copyright (C) 2025 Wire Swiss GmbH
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,7 @@ package com.wire.android.ui.home.conversations.folder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wire.android.R
-import com.wire.android.di.ScopedArgs
-import com.wire.android.di.ViewModelScopedPreview
+import com.wire.android.di.ViewModelPreview
 import com.wire.android.model.DefaultSnackBarMessage
 import com.wire.android.model.SnackBarMessage
 import com.wire.android.util.dispatchers.DispatcherProvider
@@ -35,11 +34,10 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import javax.inject.Inject
 
-@ViewModelScopedPreview
-interface RemoveConversationFromFolderVM {
+@ViewModelPreview
+interface RemoveConversationFromFolderViewModel {
     val infoMessage: SharedFlow<SnackBarMessage>
         get() = MutableSharedFlow()
 
@@ -47,10 +45,10 @@ interface RemoveConversationFromFolderVM {
 }
 
 @HiltViewModel
-class RemoveConversationFromFolderVMImpl @Inject constructor(
+class RemoveConversationFromFolderViewModelImpl @Inject constructor(
     private val dispatchers: DispatcherProvider,
     private val removeConversationFromFolder: RemoveConversationFromFolderUseCase,
-) : ViewModel(), RemoveConversationFromFolderVM {
+) : ViewModel(), RemoveConversationFromFolderViewModel {
 
     private val _infoMessage = MutableSharedFlow<SnackBarMessage>()
     override val infoMessage = _infoMessage.asSharedFlow()
@@ -85,9 +83,4 @@ class RemoveConversationFromFolderVMImpl @Inject constructor(
             }
         }
     }
-}
-
-@Serializable
-data object RemoveConversationFromFolderArgs : ScopedArgs {
-    override val key = "RemoveConversationFromFolderArgsKey"
 }

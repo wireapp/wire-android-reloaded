@@ -27,7 +27,7 @@ import androidx.lifecycle.viewModelScope
 import com.wire.android.R
 import com.wire.android.appLogger
 import com.wire.android.di.scopedArgs
-import com.wire.android.di.ViewModelScopedPreview
+import com.wire.android.di.ViewModelPreview
 import com.wire.android.util.dispatchers.DispatcherProvider
 import com.wire.android.util.ui.UIText
 import com.wire.kalium.logger.obfuscateId
@@ -54,7 +54,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-@ViewModelScopedPreview
+@ViewModelPreview
 interface ConnectionActionButtonViewModel {
     val infoMessage: SharedFlow<UIText>
         get() = MutableSharedFlow()

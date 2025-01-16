@@ -31,6 +31,7 @@ import androidx.work.WorkManager
 import com.wire.android.BuildConfig
 import com.wire.android.appLogger
 import com.wire.android.di.CurrentAccount
+import com.wire.android.di.ViewModelPreview
 import com.wire.android.mapper.UserTypeMapper
 import com.wire.android.mapper.toConversationItem
 import com.wire.android.model.SnackBarMessage
@@ -99,6 +100,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import java.util.Date
 
+@ViewModelPreview
 interface ConversationListViewModel {
     val infoMessage: SharedFlow<SnackBarMessage> get() = MutableSharedFlow()
     val closeBottomSheet: SharedFlow<Unit> get() = MutableSharedFlow()
@@ -115,7 +117,7 @@ interface ConversationListViewModel {
     fun unblockUser(userId: UserId) {}
     fun deleteGroup(groupDialogState: GroupDialogState) {}
     fun deleteGroupLocally(groupDialogState: GroupDialogState) {}
-    fun observeIsDeletingConversationLocally(conversationId: ConversationId): Flow<Boolean>
+    fun observeIsDeletingConversationLocally(conversationId: ConversationId): Flow<Boolean> = flowOf(false)
     fun leaveGroup(leaveGroupState: GroupDialogState) {}
     fun clearConversationContent(dialogState: DialogState) {}
     fun muteConversation(conversationId: ConversationId?, mutedConversationStatus: MutedConversationStatus) {}
@@ -123,11 +125,10 @@ interface ConversationListViewModel {
     fun searchQueryChanged(searchQuery: String) {}
 }
 
-class ConversationListViewModelPreview(
+class ConversationListViewModelPaginatedPreview(
     foldersWithConversations: Flow<PagingData<ConversationFolderItem>> = previewConversationFoldersFlow(),
 ) : ConversationListViewModel {
     override val conversationListState = ConversationListState.Paginated(foldersWithConversations)
-    override fun observeIsDeletingConversationLocally(conversationId: ConversationId): Flow<Boolean> = flowOf(false)
 }
 
 @Suppress("MagicNumber", "TooManyFunctions", "LongParameterList")

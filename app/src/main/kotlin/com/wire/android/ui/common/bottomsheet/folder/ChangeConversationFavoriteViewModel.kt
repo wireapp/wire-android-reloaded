@@ -1,6 +1,6 @@
 /*
  * Wire
- * Copyright (C) 2024 Wire Swiss GmbH
+ * Copyright (C) 2025 Wire Swiss GmbH
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package com.wire.android.ui.common.bottomsheet.folder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wire.android.R
-import com.wire.android.di.ViewModelScopedPreview
+import com.wire.android.di.ViewModelPreview
 import com.wire.android.model.SnackBarMessage
 import com.wire.android.model.asSnackBarMessage
 import com.wire.android.ui.home.conversationslist.model.GroupDialogState
@@ -35,8 +35,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@ViewModelScopedPreview
-interface ChangeConversationFavoriteVM {
+@ViewModelPreview
+interface ChangeConversationFavoriteViewModel {
     val infoMessage: SharedFlow<SnackBarMessage>
         get() = MutableSharedFlow()
 
@@ -44,10 +44,10 @@ interface ChangeConversationFavoriteVM {
 }
 
 @HiltViewModel
-class ChangeConversationFavoriteVMImpl @Inject constructor(
+class ChangeConversationFavoriteViewModelImpl @Inject constructor(
     private val addConversationToFavorites: AddConversationToFavoritesUseCase,
     private val removeConversationFromFavorites: RemoveConversationFromFavoritesUseCase,
-) : ChangeConversationFavoriteVM, ViewModel() {
+) : ChangeConversationFavoriteViewModel, ViewModel() {
 
     private val _infoMessage = MutableSharedFlow<SnackBarMessage>()
     override val infoMessage = _infoMessage.asSharedFlow()

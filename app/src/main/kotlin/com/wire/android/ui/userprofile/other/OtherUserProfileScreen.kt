@@ -56,7 +56,7 @@ import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 import com.ramcosta.composedestinations.result.ResultRecipient
 import com.wire.android.R
-import com.wire.android.di.hiltViewModelScoped
+import com.wire.android.di.hiltViewModelWithPreview
 import com.wire.android.navigation.BackStackMode
 import com.wire.android.navigation.NavigationCommand
 import com.wire.android.navigation.Navigator
@@ -70,9 +70,8 @@ import com.wire.android.ui.common.VisibilityState
 import com.wire.android.ui.common.WireTabRow
 import com.wire.android.ui.common.bottomsheet.WireModalSheetLayout
 import com.wire.android.ui.common.bottomsheet.WireModalSheetState
-import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteStateArgs
-import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteVM
-import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteVMImpl
+import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteViewModel
+import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteViewModelImpl
 import com.wire.android.ui.common.bottomsheet.rememberWireModalSheetState
 import com.wire.android.ui.common.bottomsheet.show
 import com.wire.android.ui.common.button.WireButtonState
@@ -91,19 +90,19 @@ import com.wire.android.ui.common.topappbar.WireCenterAlignedTopAppBar
 import com.wire.android.ui.common.topappbar.WireTopAppBarTitle
 import com.wire.android.ui.common.visbility.rememberVisibilityState
 import com.wire.android.ui.connection.ConnectionActionButton
+import com.wire.android.ui.destinations.ConversationFoldersScreenDestination
 import com.wire.android.ui.destinations.ConversationMediaScreenDestination
 import com.wire.android.ui.destinations.ConversationScreenDestination
 import com.wire.android.ui.destinations.DeviceDetailsScreenDestination
 import com.wire.android.ui.destinations.SearchConversationMessagesScreenDestination
-import com.wire.android.ui.destinations.ConversationFoldersScreenDestination
 import com.wire.android.ui.home.conversations.details.SearchAndMediaRow
 import com.wire.android.ui.home.conversations.details.dialog.ClearConversationContentDialog
 import com.wire.android.ui.home.conversations.folder.ConversationFoldersNavArgs
 import com.wire.android.ui.home.conversations.folder.ConversationFoldersNavBackArgs
-import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderArgs
-import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderVM
-import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderVMImpl
+import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderViewModel
+import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderViewModelImpl
 import com.wire.android.ui.home.conversationslist.model.DialogState
+import com.wire.android.ui.home.conversationslist.model.GroupDialogState
 import com.wire.android.ui.home.conversationslist.model.Membership
 import com.wire.android.ui.legalhold.banner.LegalHoldSubjectBanner
 import com.wire.android.ui.legalhold.dialog.subject.LegalHoldSubjectProfileDialog
@@ -118,6 +117,7 @@ import com.wire.android.ui.userprofile.other.bottomsheet.OtherUserProfileBottomS
 import com.wire.android.util.ui.PreviewMultipleThemes
 import com.wire.android.util.ui.SnackBarMessageHandler
 import com.wire.android.util.ui.UIText
+import com.wire.kalium.logic.data.conversation.ConversationFolder
 import com.wire.kalium.logic.data.id.ConversationId
 import com.wire.kalium.logic.data.user.ConnectionState
 import io.github.esentsov.PackagePrivate
@@ -138,7 +138,11 @@ fun OtherUserProfileScreen(
     resultNavigator: ResultBackNavigator<String>,
     conversationFoldersScreenResultRecipient:
     ResultRecipient<ConversationFoldersScreenDestination, ConversationFoldersNavBackArgs>,
-    viewModel: OtherUserProfileScreenViewModel = hiltViewModel()
+    viewModel: OtherUserProfileScreenViewModel = hiltViewModel(),
+    changeConversationFavoriteViewModel: ChangeConversationFavoriteViewModel =
+        hiltViewModelWithPreview<ChangeConversationFavoriteViewModelImpl, ChangeConversationFavoriteViewModel>(),
+    removeConversationFromFolderViewModel: RemoveConversationFromFolderViewModel =
+        hiltViewModelWithPreview<RemoveConversationFromFolderViewModelImpl, RemoveConversationFromFolderViewModel>(),
 ) {
     val snackbarHostState = LocalSnackbarHostState.current
     val context = LocalContext.current
@@ -175,6 +179,9 @@ fun OtherUserProfileScreen(
 
     val legalHoldSubjectDialogState = rememberVisibilityState<Unit>()
 
+    SnackBarMessageHandler(removeConversationFromFolderViewModel.infoMessage, onEmitted = sheetState::hide)
+    SnackBarMessageHandler(changeConversationFavoriteViewModel.infoMessage, onEmitted = sheetState::hide)
+
     OtherProfileScreenContent(
         scope = scope,
         state = viewModel.state,
@@ -210,6 +217,8 @@ fun OtherUserProfileScreen(
         navigateBack = navigator::navigateBack,
         onConversationMediaClick = onConversationMediaClick,
         onLegalHoldLearnMoreClick = remember { { legalHoldSubjectDialogState.show(Unit) } },
+        changeFavoriteState = changeConversationFavoriteViewModel::changeFavoriteState,
+        removeFromFolder = removeConversationFromFolderViewModel::removeFromFolder,
         onMoveToFolder = null // TODO implement when conversation details will be available in OtherUserProfileScreenViewModel
     )
 
@@ -267,14 +276,8 @@ fun OtherProfileScreenContent(
     navigateBack: () -> Unit = {},
     onLegalHoldLearnMoreClick: () -> Unit = {},
     onMoveToFolder: ((ConversationFoldersNavArgs) -> Unit)? = null,
-    changeConversationFavoriteViewModel: ChangeConversationFavoriteVM =
-        hiltViewModelScoped<ChangeConversationFavoriteVMImpl, ChangeConversationFavoriteVM, ChangeConversationFavoriteStateArgs>(
-            ChangeConversationFavoriteStateArgs
-        ),
-    removeConversationFromFolderViewModel: RemoveConversationFromFolderVM =
-        hiltViewModelScoped<RemoveConversationFromFolderVMImpl, RemoveConversationFromFolderVM, RemoveConversationFromFolderArgs>(
-            RemoveConversationFromFolderArgs
-        )
+    changeFavoriteState: (GroupDialogState, addToFavorite: Boolean) -> Unit,
+    removeFromFolder: (conversationId: ConversationId, conversationName: String, folder: ConversationFolder) -> Unit,
 ) {
     val otherUserProfileScreenState = rememberOtherUserProfileScreenState()
     val blockUserDialogState = rememberVisibilityState<BlockUserDialogState>()
@@ -309,9 +312,6 @@ fun OtherProfileScreenContent(
             if (!isVisible) bottomSheetState.clearBottomSheetState()
         })
     }
-
-    SnackBarMessageHandler(removeConversationFromFolderViewModel.infoMessage, onEmitted = closeBottomSheet)
-    SnackBarMessageHandler(changeConversationFavoriteViewModel.infoMessage, onEmitted = closeBottomSheet)
 
     val tabItems by remember(state) {
         derivedStateOf {
@@ -398,10 +398,10 @@ fun OtherProfileScreenContent(
                 unblockUser = unblockUserDialogState::show,
                 clearContent = clearConversationDialogState::show,
                 archivingStatusState = archivingConversationDialogState::show,
-                changeFavoriteState = changeConversationFavoriteViewModel::changeFavoriteState,
+                changeFavoriteState = changeFavoriteState,
                 closeBottomSheet = closeBottomSheet,
                 onMoveToFolder = onMoveToFolder,
-                removeFromFolder = removeConversationFromFolderViewModel::removeFromFolder
+                removeFromFolder = removeFromFolder,
             )
         }
     )
@@ -674,7 +674,9 @@ fun PreviewOtherProfileScreenGroupMemberContent() {
             closeBottomSheet = {},
             eventsHandler = OtherUserProfileEventsHandler.PREVIEW,
             bottomSheetEventsHandler = OtherUserProfileBottomSheetEventsHandler.PREVIEW,
-            onSearchConversationMessagesClick = {}
+            onSearchConversationMessagesClick = {},
+            changeFavoriteState = { _, _ -> },
+            removeFromFolder = { _, _, _ -> },
         )
     }
 }
@@ -696,7 +698,9 @@ fun PreviewOtherProfileScreenContent() {
             closeBottomSheet = {},
             eventsHandler = OtherUserProfileEventsHandler.PREVIEW,
             bottomSheetEventsHandler = OtherUserProfileBottomSheetEventsHandler.PREVIEW,
-            onSearchConversationMessagesClick = {}
+            onSearchConversationMessagesClick = {},
+            changeFavoriteState = { _, _ -> },
+            removeFromFolder = { _, _, _ -> },
         )
     }
 }
@@ -717,7 +721,9 @@ fun PreviewOtherProfileScreenContentNotConnected() {
             closeBottomSheet = {},
             eventsHandler = OtherUserProfileEventsHandler.PREVIEW,
             bottomSheetEventsHandler = OtherUserProfileBottomSheetEventsHandler.PREVIEW,
-            onSearchConversationMessagesClick = {}
+            onSearchConversationMessagesClick = {},
+            changeFavoriteState = { _, _ -> },
+            removeFromFolder = { _, _, _ -> },
         )
     }
 }
@@ -741,6 +747,8 @@ fun PreviewOtherProfileScreenTempUser() {
             eventsHandler = OtherUserProfileEventsHandler.PREVIEW,
             bottomSheetEventsHandler = OtherUserProfileBottomSheetEventsHandler.PREVIEW,
             onSearchConversationMessagesClick = {},
+            changeFavoriteState = { _, _ -> },
+            removeFromFolder = { _, _, _ -> },
         )
     }
 }

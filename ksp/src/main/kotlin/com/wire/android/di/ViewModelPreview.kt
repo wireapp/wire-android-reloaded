@@ -31,35 +31,35 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
 
-class ViewModelScopedPreviewProcessorProvider : SymbolProcessorProvider {
+class ViewModelPreviewProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
-        ViewModelScopedPreviewProcessor(environment.codeGenerator)
+        ViewModelPreviewProcessor(environment.codeGenerator)
 }
 
-internal class ViewModelScopedPreviewProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
+internal class ViewModelPreviewProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val viewModelScopedPreviews: List<KSClassDeclaration> = resolver
-            .getSymbolsWithAnnotation("com.wire.android.di.ViewModelScopedPreview")
+        val viewModelPreviews: List<KSClassDeclaration> = resolver
+            .getSymbolsWithAnnotation("com.wire.android.di.ViewModelPreview")
             .filterIsInstance<KSClassDeclaration>()
             .toList()
-        if (!viewModelScopedPreviews.iterator().hasNext()) return emptyList()
-        viewModelScopedPreviews.forEach { preview ->
+        if (!viewModelPreviews.iterator().hasNext()) return emptyList()
+        viewModelPreviews.forEach { preview ->
             require(preview.classKind == ClassKind.INTERFACE) {
                     "ViewModelScopedPreview can only be applied to interfaces, " +
                             "but ${preview.qualifiedName?.asString()} is a ${preview.classKind}"
             }
             require(!preview.getAllFunctions().any(KSFunctionDeclaration::isAbstract)) {
-                    "ViewModelScopedPreview can only be applied to interfaces with default implementations, " +
-                            "but ${preview.qualifiedName?.asString()} is abstract"
+                    "ViewModelPreview can only be applied to interfaces with default implementations, " +
+                            "but ${preview.qualifiedName?.asString()} has abstract functions"
             }
             require(!preview.getAllProperties().any(KSPropertyDeclaration::isAbstract)) {
-                    "ViewModelScopedPreview can only be applied to interfaces with default implementations, " +
-                            "but ${preview.qualifiedName?.asString()} is abstract"
+                    "ViewModelPreview can only be applied to interfaces with default implementations, " +
+                            "but ${preview.qualifiedName?.asString()} has abstract properties"
             }
             createObjectFile(preview)
         }
-        createListFile(viewModelScopedPreviews)
-        return (viewModelScopedPreviews).filterNot { it.validate() }.toList()
+        createListFile(viewModelPreviews)
+        return (viewModelPreviews).filterNot { it.validate() }.toList()
     }
 
     private fun KSClassDeclaration.previewName() = "${this.simpleName.asString()}Preview"
@@ -78,7 +78,7 @@ internal class ViewModelScopedPreviewProcessor(private val codeGenerator: CodeGe
     private fun createListFile(items: List<KSClassDeclaration>) {
         if (!items.iterator().hasNext()) return
         val packageName = "com.wire.android.di"
-        val name = "ViewModelScopedPreviews"
+        val name = "ViewModelPreviews"
         val content = "package $packageName\n\n" +
                 items.joinToString("\n") { "import ${it.packageName.asString()}.${it.previewName()}" } + "\n\n" +
                 "val $name = listOf(\n\t" + items.joinToString(",\n\t") { it.previewName() } + "\n)"

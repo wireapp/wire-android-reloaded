@@ -1,6 +1,6 @@
 /*
  * Wire
- * Copyright (C) 2024 Wire Swiss GmbH
+ * Copyright (C) 2025 Wire Swiss GmbH
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.wire.android.di.AssistedViewModelFactory
 import com.wire.android.di.ScopedArgs
-import com.wire.android.di.ViewModelScopedPreview
+import com.wire.android.di.ViewModelPreview
 import com.wire.kalium.logic.data.conversation.ConversationFolder
 import com.wire.kalium.logic.feature.conversation.folder.ObserveUserFoldersUseCase
 import dagger.assisted.Assisted
@@ -37,21 +36,21 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
-@ViewModelScopedPreview
-interface ConversationFoldersVM {
+@ViewModelPreview
+interface ConversationFoldersViewModel {
     fun state(): ConversationFoldersState = ConversationFoldersState(persistentListOf())
     fun onFolderSelected(folderId: String) {}
 }
 
-@HiltViewModel(assistedFactory = ConversationFoldersVMImpl.Factory::class)
-class ConversationFoldersVMImpl @AssistedInject constructor(
+@HiltViewModel(assistedFactory = ConversationFoldersViewModelImpl.Factory::class)
+class ConversationFoldersViewModelImpl @AssistedInject constructor(
     @Assisted val args: ConversationFoldersStateArgs,
     private val observeUserFoldersUseCase: ObserveUserFoldersUseCase,
-) : ConversationFoldersVM, ViewModel() {
+) : ConversationFoldersViewModel, ViewModel() {
 
     @AssistedFactory
-    interface Factory : AssistedViewModelFactory<ConversationFoldersVMImpl, ConversationFoldersStateArgs> {
-        override fun create(args: ConversationFoldersStateArgs): ConversationFoldersVMImpl
+    interface Factory {
+        fun create(args: ConversationFoldersStateArgs): ConversationFoldersViewModelImpl
     }
 
     private var state by mutableStateOf(ConversationFoldersState(persistentListOf(), args.selectedFolderId))

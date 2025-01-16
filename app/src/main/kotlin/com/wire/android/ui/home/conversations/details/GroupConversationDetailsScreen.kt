@@ -63,7 +63,7 @@ import com.ramcosta.composedestinations.result.ResultBackNavigator
 import com.ramcosta.composedestinations.result.ResultRecipient
 import com.wire.android.R
 import com.wire.android.appLogger
-import com.wire.android.di.hiltViewModelScoped
+import com.wire.android.di.hiltViewModelWithPreview
 import com.wire.android.navigation.NavigationCommand
 import com.wire.android.navigation.Navigator
 import com.wire.android.navigation.WireDestination
@@ -79,9 +79,8 @@ import com.wire.android.ui.common.bottomsheet.WireModalSheetLayout
 import com.wire.android.ui.common.bottomsheet.conversation.ConversationSheetContent
 import com.wire.android.ui.common.bottomsheet.conversation.ConversationTypeDetail
 import com.wire.android.ui.common.bottomsheet.conversation.rememberConversationSheetState
-import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteStateArgs
-import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteVM
-import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteVMImpl
+import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteViewModel
+import com.wire.android.ui.common.bottomsheet.folder.ChangeConversationFavoriteViewModelImpl
 import com.wire.android.ui.common.bottomsheet.rememberWireModalSheetState
 import com.wire.android.ui.common.bottomsheet.show
 import com.wire.android.ui.common.button.WirePrimaryButton
@@ -114,7 +113,7 @@ import com.wire.android.ui.home.conversations.details.participants.GroupConversa
 import com.wire.android.ui.home.conversations.details.participants.model.UIParticipant
 import com.wire.android.ui.home.conversations.folder.ConversationFoldersNavArgs
 import com.wire.android.ui.home.conversations.folder.ConversationFoldersNavBackArgs
-import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderVM
+import com.wire.android.ui.home.conversations.folder.RemoveConversationFromFolderViewModel
 import com.wire.android.ui.home.conversationslist.model.DialogState
 import com.wire.android.ui.home.conversationslist.model.GroupDialogState
 import com.wire.android.ui.legalhold.dialog.subject.LegalHoldSubjectConversationDialog
@@ -146,7 +145,9 @@ fun GroupConversationDetailsScreen(
     conversationFoldersScreenResultRecipient:
     ResultRecipient<ConversationFoldersScreenDestination, ConversationFoldersNavBackArgs>,
     viewModel: GroupConversationDetailsViewModel = hiltViewModel(),
-    removeConversationFromFolderVM: RemoveConversationFromFolderVM = hiltViewModel(),
+    removeConversationFromFolderViewModel: RemoveConversationFromFolderViewModel = hiltViewModel(),
+    changeConversationFavoriteStateViewModel: ChangeConversationFavoriteViewModel =
+        hiltViewModel<ChangeConversationFavoriteViewModelImpl, ChangeConversationFavoriteViewModel>(),
 ) {
     val scope = rememberCoroutineScope()
     val resources = LocalContext.current.resources
@@ -258,7 +259,8 @@ fun GroupConversationDetailsScreen(
         onMoveToFolder = {
             navigator.navigate(NavigationCommand(ConversationFoldersScreenDestination(it)))
         },
-        removeFromFolder = removeConversationFromFolderVM::removeFromFolder
+        removeFromFolder = removeConversationFromFolderViewModel::removeFromFolder,
+        changeFavoriteState = changeConversationFavoriteStateViewModel::changeFavoriteState,
     )
 
     val tryAgainSnackBarMessage = stringResource(id = R.string.error_unknown_message)
@@ -314,11 +316,8 @@ private fun GroupConversationDetailsContent(
     onConversationMediaClick: () -> Unit,
     removeFromFolder: (conversationId: ConversationId, conversationName: String, folder: ConversationFolder) -> Unit,
     onMoveToFolder: (ConversationFoldersNavArgs) -> Unit = {},
+    changeFavoriteState: (GroupDialogState, addToFavorite: Boolean) -> Unit,
     initialPageIndex: GroupConversationDetailsTabItem = GroupConversationDetailsTabItem.OPTIONS,
-    changeConversationFavoriteStateViewModel: ChangeConversationFavoriteVM =
-        hiltViewModelScoped<ChangeConversationFavoriteVMImpl, ChangeConversationFavoriteVM, ChangeConversationFavoriteStateArgs>(
-            ChangeConversationFavoriteStateArgs
-        ),
 ) {
     val scope = rememberCoroutineScope()
     val resources = LocalContext.current.resources
@@ -496,7 +495,7 @@ private fun GroupConversationDetailsContent(
                         )
                     }
                 },
-                changeFavoriteState = changeConversationFavoriteStateViewModel::changeFavoriteState,
+                changeFavoriteState = changeFavoriteState,
                 moveConversationToFolder = onMoveToFolder,
                 removeFromFolder = removeFromFolder,
                 updateConversationArchiveStatus = {
@@ -654,7 +653,8 @@ fun PreviewGroupConversationDetails() {
             onConversationMediaClick = {},
             isAbandonedOneOnOneConversation = false,
             initialPageIndex = GroupConversationDetailsTabItem.PARTICIPANTS,
-            removeFromFolder = { _, _, _ -> }
+            removeFromFolder = { _, _, _ -> },
+            changeFavoriteState = { _, _ -> },
         )
     }
 }

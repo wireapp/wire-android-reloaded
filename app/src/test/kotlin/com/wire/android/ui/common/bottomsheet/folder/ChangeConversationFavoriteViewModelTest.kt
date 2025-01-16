@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(CoroutineTestExtension::class)
-class ChangeConversationFavoriteVMTest {
+class ChangeConversationFavoriteViewModelTest {
 
     @Test
     fun `given conversation is added to favorites successfully, then infoMessage should emit success`() = runTest {
@@ -126,7 +126,7 @@ class ChangeConversationFavoriteVMTest {
         @MockK
         lateinit var removeConversationFromFavorites: RemoveConversationFromFavoritesUseCase
 
-        private lateinit var viewModel: ChangeConversationFavoriteVM
+        private lateinit var viewModel: ChangeConversationFavoriteViewModel
 
         init {
             MockKAnnotations.init(this, relaxUnitFun = true)
@@ -141,7 +141,7 @@ class ChangeConversationFavoriteVMTest {
         }
 
         fun arrange(block: Arrangement.() -> Unit) = apply(block).let {
-            viewModel = ChangeConversationFavoriteVMImpl(
+            viewModel = ChangeConversationFavoriteViewModelImpl(
                 addConversationToFavorites,
                 removeConversationFromFavorites
             )

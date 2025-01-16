@@ -55,7 +55,12 @@ import com.wire.android.ui.common.spacers.VerticalSpace
 import com.wire.android.ui.common.topappbar.NavigationIconType
 import com.wire.android.ui.common.topappbar.WireCenterAlignedTopAppBar
 import com.wire.android.ui.common.typography
+import com.wire.android.ui.theme.WireTheme
+import com.wire.android.util.ui.PreviewMultipleThemes
 import com.wire.kalium.logic.data.conversation.ConversationFolder
+import com.wire.kalium.logic.data.conversation.FolderType
+import com.wire.kalium.logic.data.id.ConversationId
+import kotlinx.collections.immutable.persistentListOf
 
 @RootNavGraph
 @WireDestination(
@@ -67,12 +72,12 @@ fun ConversationFoldersScreen(
     args: ConversationFoldersNavArgs,
     navigator: Navigator,
     resultNavigator: ResultBackNavigator<ConversationFoldersNavBackArgs>,
-    foldersViewModel: ConversationFoldersVM =
-        hiltViewModel<ConversationFoldersVMImpl, ConversationFoldersVMImpl.Factory>(
+    foldersViewModel: ConversationFoldersViewModel =
+        hiltViewModel<ConversationFoldersViewModelImpl, ConversationFoldersViewModelImpl.Factory>(
             creationCallback = { it.create(ConversationFoldersStateArgs(args.currentFolderId)) }
         ),
-    moveToFolderVM: MoveConversationToFolderVM =
-        hiltViewModel<MoveConversationToFolderVMImpl, MoveConversationToFolderVMImpl.Factory>(
+    moveToFolderViewModel: MoveConversationToFolderViewModel =
+        hiltViewModel<MoveConversationToFolderViewModelImpl, MoveConversationToFolderViewModelImpl.Factory>(
             creationCallback = {
                 it.create(MoveConversationToFolderArgs(args.conversationId, args.conversationName, args.currentFolderId))
             }
@@ -81,7 +86,7 @@ fun ConversationFoldersScreen(
     val resources = LocalContext.current.resources
 
     LaunchedEffect(Unit) {
-        moveToFolderVM.infoMessage.collect {
+        moveToFolderViewModel.infoMessage.collect {
             resultNavigator.setResult(ConversationFoldersNavBackArgs(message = it.asString(resources)))
             resultNavigator.navigateBack()
         }
@@ -91,7 +96,7 @@ fun ConversationFoldersScreen(
         args = args,
         foldersState = foldersViewModel.state(),
         onNavigationPressed = { navigator.navigateBack() },
-        moveConversationToFolder = moveToFolderVM::moveConversationToFolder,
+        moveConversationToFolder = moveToFolderViewModel::moveConversationToFolder,
         onFolderSelected = foldersViewModel::onFolderSelected
     )
 }
@@ -190,4 +195,22 @@ private fun Content(
             }
         }
     }
+}
+
+@PreviewMultipleThemes
+@Composable
+fun ConversationFoldersScreenPreview() = WireTheme {
+    Content(
+        args = ConversationFoldersNavArgs(
+            conversationId = ConversationId("conversationId", "domain"),
+            conversationName = "conversationName",
+            currentFolderId = "currentFolderId"
+        ),
+        foldersState = ConversationFoldersState(
+            folders = persistentListOf(
+                ConversationFolder("folderId1", "Favorite", FolderType.FAVORITE),
+                ConversationFolder("folderId2", "Custom", FolderType.USER),
+            ),
+        )
+    )
 }

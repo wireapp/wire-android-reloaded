@@ -88,8 +88,8 @@ import com.wire.android.ui.home.conversations.details.GroupConversationActionTyp
 import com.wire.android.ui.home.conversations.details.GroupConversationDetailsNavBackArgs
 import com.wire.android.ui.home.conversations.folder.ConversationFoldersNavBackArgs
 import com.wire.android.ui.home.conversations.folder.ConversationFoldersStateArgs
-import com.wire.android.ui.home.conversations.folder.ConversationFoldersVM
-import com.wire.android.ui.home.conversations.folder.ConversationFoldersVMImpl
+import com.wire.android.ui.home.conversations.folder.ConversationFoldersViewModel
+import com.wire.android.ui.home.conversations.folder.ConversationFoldersViewModelImpl
 import com.wire.android.ui.home.conversationslist.filter.ConversationFilterSheetContent
 import com.wire.android.ui.home.conversationslist.filter.ConversationFilterSheetData
 import com.wire.android.ui.home.conversationslist.filter.rememberFilterSheetState
@@ -115,9 +115,11 @@ fun HomeScreen(
     appSyncViewModel: AppSyncViewModel = hiltViewModel(),
     homeDrawerViewModel: HomeDrawerViewModel = hiltViewModel(),
     analyticsUsageViewModel: AnalyticsUsageViewModel = hiltViewModel(),
-    foldersViewModel: ConversationFoldersVM =
-        hiltViewModel<ConversationFoldersVMImpl, ConversationFoldersVMImpl.Factory>(
-            creationCallback = { it.create(ConversationFoldersStateArgs(null)) }
+    foldersViewModel: ConversationFoldersViewModel =
+        hiltViewModel<ConversationFoldersViewModelImpl, ConversationFoldersViewModelImpl.Factory>(
+            creationCallback = {
+                it.create(ConversationFoldersStateArgs(null))
+            }
         )
 ) {
     homeViewModel.checkRequirements { it.navigate(navigator::navigate) }

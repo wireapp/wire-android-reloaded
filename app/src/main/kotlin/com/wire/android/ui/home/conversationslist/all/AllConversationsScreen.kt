@@ -27,7 +27,7 @@ import com.wire.android.navigation.WireDestination
 import com.wire.android.navigation.rememberNavigator
 import com.wire.android.ui.common.topappbar.search.rememberSearchbarState
 import com.wire.android.ui.home.HomeStateHolder
-import com.wire.android.ui.home.conversationslist.ConversationListViewModelPreview
+import com.wire.android.ui.home.conversationslist.ConversationListViewModelPaginatedPreview
 import com.wire.android.ui.home.conversationslist.ConversationsScreenContent
 import com.wire.android.ui.home.conversationslist.common.previewConversationFoldersFlow
 import com.wire.android.ui.home.conversationslist.model.ConversationsSource
@@ -69,7 +69,7 @@ fun PreviewAllConversationsEmptyScreen() = WireTheme {
         searchBarState = rememberSearchbarState(),
         conversationsSource = ConversationsSource.MAIN,
         emptyListContent = { ConversationsEmptyContent() },
-        conversationListViewModel = ConversationListViewModelPreview(previewConversationFoldersFlow(list = listOf())),
+        conversationListViewModel = ConversationListViewModelPaginatedPreview(previewConversationFoldersFlow(list = listOf())),
     )
 }
 
@@ -81,7 +81,9 @@ fun PreviewAllConversationsEmptySearchScreen() = WireTheme {
         searchBarState = rememberSearchbarState(initialIsSearchActive = true, searchQueryTextState = TextFieldState(initialText = "er")),
         conversationsSource = ConversationsSource.MAIN,
         emptyListContent = { ConversationsEmptyContent() },
-        conversationListViewModel = ConversationListViewModelPreview(previewConversationFoldersFlow(searchQuery = "er", list = listOf())),
+        conversationListViewModel = ConversationListViewModelPaginatedPreview(
+            previewConversationFoldersFlow(searchQuery = "er", list = listOf())
+        ),
     )
 }
 
@@ -93,6 +95,6 @@ fun PreviewAllConversationsSearchScreen() = WireTheme {
         searchBarState = rememberSearchbarState(initialIsSearchActive = true, searchQueryTextState = TextFieldState(initialText = "er")),
         conversationsSource = ConversationsSource.MAIN,
         emptyListContent = { ConversationsEmptyContent() },
-        conversationListViewModel = ConversationListViewModelPreview(previewConversationFoldersFlow("er")),
+        conversationListViewModel = ConversationListViewModelPaginatedPreview(previewConversationFoldersFlow("er")),
     )
 }
