@@ -29,6 +29,7 @@ import androidx.navigation.NavDestination
 import com.ramcosta.composedestinations.spec.DestinationSpec
 import com.wire.android.appLogger
 import com.wire.android.feature.analytics.AnonymousAnalyticsManagerImpl
+import com.wire.android.navigation.getBaseRoute
 import com.wire.android.navigation.toDestination
 import com.wire.android.ui.destinations.ConversationScreenDestination
 import com.wire.android.ui.destinations.CreateAccountDetailsScreenDestination
@@ -123,8 +124,9 @@ class CurrentScreenManager @Inject constructor(
     }
 
     override fun onDestinationChanged(controller: NavController, destination: NavDestination, arguments: Bundle?) {
-        val currentView = currentScreenState.value.toString()
-        AnonymousAnalyticsManagerImpl.stopView(currentView)
+        val currentScreenName = currentScreenName()
+        AnonymousAnalyticsManagerImpl.stopView(currentScreenName)
+
         val currentItem = destination.toDestination()
         currentScreenState.value = CurrentScreen.fromDestination(
             currentItem,
@@ -132,8 +134,21 @@ class CurrentScreenManager @Inject constructor(
             isApplicationVisibleFlow.value
         )
 
-        val newView = currentScreenState.value.toString()
-        AnonymousAnalyticsManagerImpl.recordView(newView)
+        val newScreenName = currentScreenName()
+        AnonymousAnalyticsManagerImpl.recordView(newScreenName)
+    }
+
+    private fun currentScreenName() = currentScreenState.value.let { currentScreen ->
+        when (currentScreen) {
+            is CurrentScreen.Home,
+            is CurrentScreen.Conversation,
+            is CurrentScreen.OtherUserProfile,
+            is CurrentScreen.ImportMedia,
+            is CurrentScreen.DeviceManager -> return@let currentScreen.toScreenName()
+
+            is CurrentScreen.AuthRelated -> return@let currentScreen.route?.getBaseRoute() ?: currentScreen.toString()
+            else -> return@let (currentScreen as? CurrentScreen.SomeOther)?.route?.getBaseRoute() ?: currentScreen.toString()
+        }
     }
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -164,23 +179,31 @@ class CurrentScreenManager @Inject constructor(
 sealed class CurrentScreen {
 
     // Home Screen is being displayed
-    data object Home : CurrentScreen()
+    data object Home : CurrentScreen() {
+        override fun toScreenName() = "HomeScreen"
+    }
 
     // Some Conversation is opened
     data class Conversation(val id: ConversationId) : CurrentScreen() {
         override fun toString(): String = "Conversation(${id.toString().obfuscateId()})"
+        override fun toScreenName() = "ConversationScreen"
     }
 
     // Another User Profile Screen is opened
     data class OtherUserProfile(val id: ConversationId) : CurrentScreen() {
         override fun toString(): String = "OtherUserProfile(${id.toString().obfuscateId()})"
+        override fun toScreenName() = "OtherUserProfileScreen"
     }
 
     // Import media screen is opened
-    data object ImportMedia : CurrentScreen()
+    data object ImportMedia : CurrentScreen() {
+        override fun toScreenName() = "ImportMediaScreen"
+    }
 
     // SelfDevices screen is opened
-    data object DeviceManager : CurrentScreen()
+    data object DeviceManager : CurrentScreen() {
+        override fun toScreenName() = "DeviceManagerScreen"
+    }
 
     // Auth related screen is opened
     data class AuthRelated(val route: String?) : CurrentScreen()
@@ -190,6 +213,8 @@ sealed class CurrentScreen {
 
     // App is in background (screen is turned off, or covered by another app), non of the screens is visible
     data object InBackground : CurrentScreen()
+
+    open fun toScreenName(): String = "UnknownScreen"
 
     companion object {
         @SuppressLint("RestrictedApi")
