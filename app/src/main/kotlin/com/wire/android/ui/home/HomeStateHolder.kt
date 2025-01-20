@@ -38,7 +38,7 @@ import com.wire.android.ui.common.topappbar.ConversationFilterState
 import com.wire.android.ui.common.topappbar.rememberConversationFilterState
 import com.wire.android.ui.common.topappbar.search.SearchBarState
 import com.wire.android.ui.common.topappbar.search.rememberSearchbarState
-import com.wire.android.ui.home.conversationslist.filter.uiText
+import com.wire.android.ui.home.conversationslist.filter.toTopBarTitle
 import com.wire.kalium.logic.data.conversation.ConversationFilter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -61,7 +61,7 @@ class HomeStateHolder(
 
     val currentTitle
         get() = when (currentNavigationItemState.value) {
-            Conversations -> conversationFilterState.filter.uiText()
+            Conversations -> conversationFilterState.filter.toTopBarTitle()
             else -> currentNavigationItemState.value.title
         }
 

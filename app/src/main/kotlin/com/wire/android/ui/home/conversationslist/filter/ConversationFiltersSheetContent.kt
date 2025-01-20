@@ -47,7 +47,7 @@ fun ConversationFiltersSheetContent(
                     RichMenuItemState.DEFAULT
                 }
                 SelectableMenuBottomSheetItem(
-                    title = ConversationFilter.All.uiText().asString(),
+                    title = ConversationFilter.All.toSheetItemLabel().asString(),
                     onItemClick = Clickable(
                         enabled = state == RichMenuItemState.DEFAULT,
                         onClickDescription = stringResource(id = R.string.content_description_select_label),
@@ -63,7 +63,7 @@ fun ConversationFiltersSheetContent(
                     RichMenuItemState.DEFAULT
                 }
                 SelectableMenuBottomSheetItem(
-                    title = ConversationFilter.Favorites.uiText().asString(),
+                    title = ConversationFilter.Favorites.toSheetItemLabel().asString(),
                     onItemClick = Clickable(
                         enabled = state == RichMenuItemState.DEFAULT,
                         onClickDescription = stringResource(id = R.string.content_description_select_label),
@@ -79,7 +79,7 @@ fun ConversationFiltersSheetContent(
                     RichMenuItemState.DEFAULT
                 }
                 SelectableMenuBottomSheetItem(
-                    title = ConversationFilter.Groups.uiText().asString(),
+                    title = ConversationFilter.Groups.toSheetItemLabel().asString(),
                     onItemClick = Clickable(
                         enabled = state == RichMenuItemState.DEFAULT,
                         onClickDescription = stringResource(id = R.string.content_description_select_label),
@@ -95,7 +95,7 @@ fun ConversationFiltersSheetContent(
                     RichMenuItemState.DEFAULT
                 }
                 SelectableMenuBottomSheetItem(
-                    title = ConversationFilter.OneOnOne.uiText().asString(),
+                    title = ConversationFilter.OneOnOne.toSheetItemLabel().asString(),
                     onItemClick = Clickable(
                         enabled = state == RichMenuItemState.DEFAULT,
                         onClickDescription = stringResource(id = R.string.content_description_select_label),
