@@ -48,7 +48,7 @@ jobs:
           npx generate-changelog@1.8.0 -t "$PREVIOUS_TAG...$CURRENT_TAG"
 
       - name: 'Attach changelog to tag'
-        uses: softprops/action-gh-release@v2.2.0
+        uses: softprops/action-gh-release@v2.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.ANDROID_BOB_GH_TOKEN }}
         with:
