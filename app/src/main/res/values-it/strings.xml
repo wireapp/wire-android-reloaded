@@ -499,7 +499,6 @@ Fino a 500 persone possono unirsi a una conversazione di gruppo.</string>
     <!-- Conversations BottomSheet -->
     <string name="label_notifications">Notifiche</string>
     <string name="label_add_to_favourites">Aggiungi ai preferiti</string>
-    <string name="label_move_to_folder">Sposta in cartella</string>
     <string name="label_move_to_archive">Sposta in archivio</string>
     <string name="label_unarchive">Disarchivia</string>
     <string name="label_clear_content">Cancella contenuto...</string>
@@ -1328,4 +1327,5 @@ registrato. Sei pregato di riprovare.</string>
     <!-- Debug Settings -->
     <string name="debug_settings_screen_title">Impostazioni di Debug</string>
     <!--    Personal to team migration screen-->
+    <!-- Move to Folder -->
 </resources>

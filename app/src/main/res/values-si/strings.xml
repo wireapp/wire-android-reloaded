@@ -504,7 +504,6 @@
     <!-- Conversations BottomSheet -->
     <string name="label_notifications">දැනුම්දීම්</string>
     <string name="label_add_to_favourites">ප්‍රියතමයන්ට යොදන්න</string>
-    <string name="label_move_to_folder">බහාලුමට ගෙනයන්න</string>
     <string name="label_move_to_archive">සංරක්‍ෂිතයට ගෙනයන්න</string>
     <string name="label_unarchive">අසංරක්‍ෂණය</string>
     <string name="label_clear_content">අන්තර්ගතය මකන්න…</string>
@@ -1340,4 +1339,5 @@
     <!-- Debug Settings -->
     <string name="debug_settings_screen_title">නිදොස්කරණ සැකසුම්</string>
     <!--    Personal to team migration screen-->
+    <!-- Move to Folder -->
 </resources>

@@ -450,7 +450,6 @@ Hasta 500 personas pueden unirse a una conversaci&#243;n en grupo.</string>
     <!-- Conversations BottomSheet -->
     <string name="label_notifications">Notificaciones</string>
     <string name="label_add_to_favourites">Agregar a Favoritos</string>
-    <string name="label_move_to_folder">Mover a Carpeta</string>
     <string name="label_move_to_archive">Mover a Archivo</string>
     <string name="label_clear_content">Borrar contenido...</string>
     <string name="label_block">Bloquear</string>
@@ -1024,4 +1023,5 @@ Hasta 500 personas pueden unirse a una conversaci&#243;n en grupo.</string>
     <!-- Debug Settings -->
     <string name="debug_settings_screen_title">Configuraci&#243;n de depuraci&#243;n</string>
     <!--    Personal to team migration screen-->
+    <!-- Move to Folder -->
 </resources>

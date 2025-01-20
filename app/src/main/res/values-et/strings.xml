@@ -456,4 +456,5 @@
     <!-- Debug Settings -->
     <string name="debug_settings_screen_title">Silumise seaded</string>
     <!--    Personal to team migration screen-->
+    <!-- Move to Folder -->
 </resources>

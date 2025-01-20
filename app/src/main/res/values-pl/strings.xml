@@ -423,7 +423,6 @@ Do grupy mo&#380;e do&#322;&#261;czy&#263; maksymalnie 500 os&#243;b.</string>
     <!-- Conversations BottomSheet -->
     <string name="label_notifications">Powiadomienia</string>
     <string name="label_add_to_favourites">Dodaj do ulubionych</string>
-    <string name="label_move_to_folder">Przenie&#347; do folderu</string>
     <string name="label_move_to_archive">Przenie&#347; do archiwum</string>
     <string name="label_clear_content">Wyczy&#347;&#263; tre&#347;&#263;...</string>
     <string name="label_block">Zablokuj</string>
@@ -898,4 +897,5 @@ Prosimy u&#380;y&#263; zarz&#261;dzania zespo&#322;ami (%1$s) na tym &#347;rodow
     <!-- Debug Settings -->
     <string name="debug_settings_screen_title">Ustawienia debugowania</string>
     <!--    Personal to team migration screen-->
+    <!-- Move to Folder -->
 </resources>

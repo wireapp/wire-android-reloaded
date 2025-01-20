@@ -41,6 +41,7 @@
     <string name="label_membership_service">Сервис</string>
     <string name="label_user_deleted">Удалено</string>
     <string name="label_try_again">Повторить</string>
+    <string name="label_done">Готово</string>
     <string name="label_message_sent_failure">Не удалось отправить сообщение из-за проблем с подключением.</string>
     <string name="label_message_edit_sent_failure">Не удалось изменить сообщение из-за проблем с подключением.</string>
     <string name="label_message_sent_remotely_failure">Сообщение не может быть отправлено, поскольку бэкэнд %s недоступен.</string>
@@ -538,6 +539,9 @@
     <string name="delete_group_conversation_menu_item">Удалить группу…</string>
     <string name="delete_group_conversation_dialog_title">Удалить “%s”?</string>
     <string name="delete_group_conversation_dialog_description">Группа будет удалена из списка бесед на всех устройствах. Вы больше не сможете получить доступ к группе и ее контенту.</string>
+    <string name="delete_group_locally_conversation_dialog_title">Удалить себя из группы \"%s\"?</string>
+    <string name="delete_group_locally_conversation_dialog_description">Вы не сможете получить доступ к группе и ее содержимому. Восстановить ее невозможно.</string>
+    <string name="delete_group_locally_delete_for_me_label">Удалить себя</string>
     <!-- Import/Export External Media -->
     <string name="import_media_content_title">Поделиться с Wire</string>
     <string name="import_media_searchbar_title">Поиск по беседе</string>
@@ -626,13 +630,17 @@
     <string name="label_notifications">Уведомления</string>
     <string name="label_add_to_favourites">Добавить в избранное</string>
     <string name="label_remove_from_favourites">Удалить из избранного</string>
-    <string name="label_move_to_folder">Переместить в папку</string>
+    <string name="label_move_to_folder">Переместить в папку...</string>
+    <string name="label_remove_from_folder">Удалить из папки “%1$s”</string>
+    <string name="label_new_folder">Новая папка</string>
+    <string name="folder_create_description">Создайте новую папку, нажав кнопку\n“Новая папка”</string>
     <string name="label_move_to_archive">Переместить в архив</string>
     <string name="label_unarchive">Переместить из архива</string>
     <string name="label_clear_content">Очистить контент…</string>
     <string name="label_block">Заблокировать</string>
     <string name="label_unblock">Разблокировать</string>
     <string name="label_leave_group">Покинуть группу</string>
+    <string name="label_delete_group_locally">Удалить себя из группы</string>
     <string name="label_delete_group">Удалить группу</string>
     <!-- Conversation filter BottomSheet -->
     <string name="label_filter_conversations">Отфильтровать беседы</string>
@@ -913,6 +921,7 @@
     <string name="error_blocking_user">Пользователь не может быть заблокирован</string>
     <string name="blocking_user_success">%s заблокирован</string>
     <string name="conversation_group_removed_success">“%s” удален</string>
+    <string name="conversation_group_removed_locally_success">Удалили себя из \"%s\"</string>
     <string name="leave_group_conversation_error">При выходе из беседы произошла ошибка</string>
     <string name="joined_conversation_group_success">Вы присоединились к беседе.</string>
     <string name="left_conversation_group_success">Вы покинули беседу.</string>
@@ -1668,4 +1677,17 @@
     <string name="personal_to_team_migration_error_message_slow_network">Wire не удалось завершить создание вашей команды из-за медленного интернет-соединения.</string>
     <string name="personal_to_team_migration_error_message_unknown_error">Wire не удалось завершить создание вашей команды из-за неизвестной ошибки.</string>
     <string name="reaction_sender_self">Вы</string>
+    <string name="emoji_picker_select_reaction">Выбрать реакцию</string>
+    <string name="label_user_database_profile">Журнал базы данных</string>
+    <!-- Move to Folder -->
+    <string name="move_to_folder_success">“%1$s” был перемещен в “%2$s”</string>
+    <string name="move_to_folder_failed">“%1$s” не может быть перемещен</string>
+    <string name="remove_from_folder_success">“%1$s” был удален из “%2$s”</string>
+    <string name="remove_from_folder_failed">“%1$s” не может быть удален</string>
+    <string name="new_folder_folder_name">НАЗВАНИЕ ПАПКИ</string>
+    <string name="new_folder_create_folder">Создать папку</string>
+    <string name="new_folder_error_name_exist">Папка с таким названием уже существует. Пожалуйста, выберите другое имя.</string>
+    <string name="new_folder_error_name_empty">Пожалуйста, введите название папки.</string>
+    <string name="new_folder_error_name_exceeded_limit_error">Минимум 1 и не более 64 символов</string>
+    <string name="new_folder_failure">Папка “%1$s” не может быть добавлена</string>
 </resources>

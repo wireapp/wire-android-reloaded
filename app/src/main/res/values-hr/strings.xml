@@ -434,7 +434,6 @@
     <!-- Conversations BottomSheet -->
     <string name="label_notifications">Obavijesti</string>
     <string name="label_add_to_favourites">Dodaj u Favorite</string>
-    <string name="label_move_to_folder">Premjesti u mapu</string>
     <string name="label_move_to_archive">Premjesti u Arhivu</string>
     <string name="label_block">Blokiraj</string>
     <string name="label_unblock">Odblokiraj</string>
@@ -601,4 +600,5 @@
     <!-- Debug Settings -->
     <string name="debug_settings_screen_title">Postavke za uklanjanje pogrešaka</string>
     <!--    Personal to team migration screen-->
+    <!-- Move to Folder -->
 </resources>

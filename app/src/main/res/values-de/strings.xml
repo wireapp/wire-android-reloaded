@@ -41,6 +41,7 @@
     <string name="label_membership_service">Dienst</string>
     <string name="label_user_deleted">Gelöscht</string>
     <string name="label_try_again">Erneut versuchen</string>
+    <string name="label_done">Fertig</string>
     <string name="label_message_sent_failure">Nachricht konnte aufgrund von Verbindungsproblemen nicht gesendet werden.</string>
     <string name="label_message_edit_sent_failure">Bearbeitete Nachricht konnte aufgrund von Verbindungsproblemen nicht gesendet werden.</string>
     <string name="label_message_sent_remotely_failure">Nachricht nicht gesendet, da das Backend %s nicht erreichbar ist.</string>
@@ -119,6 +120,8 @@
     <string name="content_description_edit_the_message">Nachricht bearbeiten</string>
     <string name="content_description_more_options">Weitere Optionen</string>
     <string name="content_description_add_contact">Kontakt hinzufügen</string>
+    <string name="content_description_pause_audio">Ton anhalten</string>
+    <string name="content_description_play_audio">Ton wiedergeben</string>
     <string name="content_description_ping_everyone">Ping</string>
     <string name="content_description_self_deleting_message_timer">Timer für selbstlöschende Nachrichten festlegen</string>
     <string name="content_description_calling_hang_up_call">Auflegen</string>
@@ -196,6 +199,8 @@
     <string name="content_description_login_email_field">Geben Sie Ihre E-Mail-Adresse oder Ihren Benutzernamen ein</string>
     <string name="content_description_login_password_field">Geben Sie Ihr Passwort ein</string>
     <string name="content_description_login_sso_code_field">Geben Sie Ihren SSO-Code oder Wire E-Mail-Adresse ein</string>
+    <string name="content_description_whats_new_welcome_item">Willkommen bei der Android-App, Link zur Support-Seite</string>
+    <string name="content_description_whats_new_all_releases_item">Alle Android Release Notizen, Link zur Release-Übersicht</string>
     <string name="content_description_empty"></string>
     <!-- Non translatable strings-->
     <!-- Wire Urls - Non translatable -->
@@ -486,6 +491,9 @@
     <string name="delete_group_conversation_menu_item">Gruppe löschen…</string>
     <string name="delete_group_conversation_dialog_title">\"%s\" entfernen?</string>
     <string name="delete_group_conversation_dialog_description">Die Gruppe wird auf allen Geräten aus der Liste Ihrer Unterhaltungen entfernt. Sie können dann nicht mehr auf die Gruppe und ihren Inhalt zugreifen.</string>
+    <string name="delete_group_locally_conversation_dialog_title">Gruppe \"%s\" für mich löschen?</string>
+    <string name="delete_group_locally_conversation_dialog_description">Sie können dann nicht mehr auf die Gruppe und ihren Inhalt zugreifen. Es gibt keine Möglichkeit, sie wiederherzustellen.</string>
+    <string name="delete_group_locally_delete_for_me_label">Für mich löschen</string>
     <!-- Import/Export External Media -->
     <string name="import_media_content_title">Mit Wire teilen</string>
     <string name="import_media_searchbar_title">Nach Unterhaltung suchen</string>
@@ -572,15 +580,20 @@
     <string name="label_notifications">Benachrichtigungen</string>
     <string name="label_add_to_favourites">Zu Favoriten hinzufügen</string>
     <string name="label_remove_from_favourites">Aus Favoriten entfernen</string>
-    <string name="label_move_to_folder">In Ordner verschieben</string>
+    <string name="label_move_to_folder">In Ordner verschieben…</string>
+    <string name="label_remove_from_folder">Aus dem Ordner “%1$s” entfernen</string>
+    <string name="label_new_folder">Neuer Ordner</string>
     <string name="label_move_to_archive">Ins Archiv verschieben</string>
     <string name="label_unarchive">Reaktivieren</string>
     <string name="label_clear_content">Verlauf löschen…</string>
     <string name="label_block">Blockieren</string>
     <string name="label_unblock">Freigeben</string>
     <string name="label_leave_group">Gruppe verlassen</string>
+    <string name="label_delete_group_locally">Gruppe für mich löschen</string>
     <string name="label_delete_group">Gruppe löschen</string>
     <!-- Conversation filter BottomSheet -->
+    <string name="label_filter_conversations">Unterhaltungen filtern</string>
+    <string name="label_filter_favorites">Favoriten</string>
     <string name="label_filter_folders">Ordner</string>
     <string name="label_filter_group">Gruppen</string>
     <string name="label_filter_one_on_one">1:1 Unterhaltungen</string>
@@ -814,6 +827,7 @@
     <string name="error_blocking_user">Benutzer konnte nicht blockiert werden</string>
     <string name="blocking_user_success">%s blockiert</string>
     <string name="conversation_group_removed_success">“%s” entfernt</string>
+    <string name="conversation_group_removed_locally_success">“%s” für mich gelöscht</string>
     <string name="leave_group_conversation_error">Beim Verlassen der Unterhaltung ist ein Fehler aufgetreten</string>
     <string name="joined_conversation_group_success">Sie sind der Unterhaltung beigetreten.</string>
     <string name="left_conversation_group_success">Sie haben die Unterhaltung verlassen.</string>
@@ -1213,6 +1227,9 @@ Bei Gruppenunterhaltungen kann der Gruppen-Admin diese Einstellung überschreibe
     <string name="guest_link_button_revoke_link">Link widerrufen</string>
     <string name="audio_not_available">Audio nicht verfügbar</string>
     <string name="audio_not_available_explanation">Beim Herunterladen dieser Audiodatei ist ein Fehler aufgetreten. Bitten Sie den Absender, die Datei erneut hochzuladen</string>
+    <string name="audio_speed_1">1x</string>
+    <string name="audio_speed_1_5">1,5x</string>
+    <string name="audio_speed_2">2x</string>
     <string name="guest_link_generate_error_message">Link konnte nicht erstellt werden. Bitte versuchen Sie es erneut</string>
     <string name="guest_link_revoke_error_message">Der Link konnte nicht widerrufen werden. Bitte versuchen Sie es erneut</string>
     <string name="revoke_guest__room_link_dialog_text">Neue Gäste werden sich nicht mehr mit diesem Link anmelden können. Aktuelle Gäste haben weiterhin Zugang zum Gästebereich.</string>
@@ -1512,4 +1529,11 @@ registriert. Bitte versuchen Sie es mit einer anderen.</string>
     <string name="personal_to_team_migration_error_message_already_in_team">Sie haben ein Team mit dieser E-Mail-Adresse auf einem anderen Gerät erstellt oder sind einem Team beigetreten.</string>
     <string name="personal_to_team_migration_error_message_slow_network">Wire konnte die Erstellung Ihres Teams aufgrund einer langsamen Internetverbindung nicht abschließen.</string>
     <string name="personal_to_team_migration_error_message_unknown_error">Wire konnte die Erstellung Ihres Teams aufgrund eines unbekannten Fehlers nicht abschließen.</string>
+    <string name="reaction_sender_self">Sie</string>
+    <string name="emoji_picker_select_reaction">Reaktion auswählen</string>
+    <!-- Move to Folder -->
+    <string name="remove_from_folder_success">“%1$s” wurde aus “%2$s” entfernt</string>
+    <string name="remove_from_folder_failed">“%1$s” konnte nicht entfernt werden</string>
+    <string name="new_folder_folder_name">ORDNERNAME</string>
+    <string name="new_folder_create_folder">Ordner erstellen</string>
 </resources>

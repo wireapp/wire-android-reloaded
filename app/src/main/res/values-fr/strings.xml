@@ -505,7 +505,6 @@
     <!-- Conversations BottomSheet -->
     <string name="label_notifications">Notifications</string>
     <string name="label_add_to_favourites">Ajouter aux favoris</string>
-    <string name="label_move_to_folder">Déplacer vers le dossier</string>
     <string name="label_move_to_archive">Déplacer vers les archives</string>
     <string name="label_unarchive">Restaurer</string>
     <string name="label_clear_content">Effacer le contenu…</string>
@@ -592,4 +591,5 @@
     <!-- Debug Settings -->
     <string name="debug_settings_screen_title">Paramètres de débogage</string>
     <!--    Personal to team migration screen-->
+    <!-- Move to Folder -->
 </resources>
