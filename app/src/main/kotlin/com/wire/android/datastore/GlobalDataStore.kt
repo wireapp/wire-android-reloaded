@@ -53,8 +53,6 @@ class GlobalDataStore @Inject constructor(@ApplicationContext private val contex
         private val MIGRATION_COMPLETED = booleanPreferencesKey("migration_completed")
         private val WELCOME_SCREEN_PRESENTED = booleanPreferencesKey("welcome_screen_presented")
         private val IS_LOGGING_ENABLED = booleanPreferencesKey("is_logging_enabled")
-        private val IS_ENCRYPTED_PROTEUS_STORAGE_ENABLED =
-            booleanPreferencesKey("is_encrypted_proteus_storage_enabled")
         private val APP_LOCK_PASSCODE = stringPreferencesKey("app_lock_passcode")
         private val APP_LOCK_SOURCE = intPreferencesKey("app_lock_source")
 
@@ -102,16 +100,6 @@ class GlobalDataStore @Inject constructor(@ApplicationContext private val contex
 
     suspend fun setRecordAudioEffectsCheckboxEnabled(enabled: Boolean) {
         context.dataStore.edit { it[RECORD_AUDIO_EFFECTS_CHECKBOX] = enabled }
-    }
-
-    fun isEncryptedProteusStorageEnabled(): Flow<Boolean> =
-        getBooleanPreference(
-            IS_ENCRYPTED_PROTEUS_STORAGE_ENABLED,
-            BuildConfig.ENCRYPT_PROTEUS_STORAGE
-        )
-
-    suspend fun setEncryptedProteusStorageEnabled(enabled: Boolean) {
-        context.dataStore.edit { it[IS_ENCRYPTED_PROTEUS_STORAGE_ENABLED] = enabled }
     }
 
     suspend fun setMigrationCompleted() {

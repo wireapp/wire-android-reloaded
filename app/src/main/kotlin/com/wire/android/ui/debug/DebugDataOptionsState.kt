@@ -18,7 +18,6 @@
 package com.wire.android.ui.debug
 
 data class DebugDataOptionsState(
-    val isEncryptedProteusStorageEnabled: Boolean = false,
     val isEventProcessingDisabled: Boolean = false,
     val keyPackagesCount: Int = 0,
     val mslClientId: String = "null",

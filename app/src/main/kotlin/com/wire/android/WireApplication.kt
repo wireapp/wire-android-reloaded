@@ -182,7 +182,7 @@ class WireApplication : BaseApp() {
 
     private suspend fun initializeApplicationLoggingFrameworks() {
         // 1. Datadog should be initialized first
-        ExternalLoggerManager.initDatadogLogger(applicationContext, globalDataStore.get())
+        ExternalLoggerManager.initDatadogLogger(applicationContext)
         // 2. Initialize our internal logging framework
         val isLoggingEnabled = globalDataStore.get().isLoggingEnabled().first()
         val config = if (isLoggingEnabled) {
