@@ -571,6 +571,7 @@
     <string name="leave_group_conversation_menu_item">Leave Group…</string>
     <string name="leave_group_conversation_dialog_title">Leave “%s”?</string>
     <string name="leave_group_conversation_dialog_description">You will then no longer be able to send or read messages in this group on any device.</string>
+    <string name="leave_group_conversation_dialog_delete_fully_check">Delete the group and its content for me on all my devices</string>
     <string name="delete_group_conversation_menu_item">Delete Group…</string>
     <string name="delete_group_conversation_dialog_title">Remove “%s”?</string>
     <string name="delete_group_conversation_dialog_description">The group will be removed from your conversations list on all devices. You will no longer be able to access the group and its content.</string>

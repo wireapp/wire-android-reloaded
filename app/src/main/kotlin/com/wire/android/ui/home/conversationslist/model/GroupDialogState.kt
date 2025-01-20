@@ -21,9 +21,9 @@ package com.wire.android.ui.home.conversationslist.model
 import com.wire.android.ui.common.bottomsheet.conversation.ConversationTypeDetail
 import com.wire.kalium.logic.data.id.ConversationId
 
-data class GroupDialogState(
-    val conversationId: ConversationId,
-    val conversationName: String
+open class GroupDialogState(
+    open val conversationId: ConversationId,
+    open val conversationName: String
 )
 
 data class DialogState(
@@ -33,3 +33,9 @@ data class DialogState(
     val isArchived: Boolean,
     val isMember: Boolean
 )
+
+data class LeaveGroupDialogState(
+    override val conversationId: ConversationId,
+    override val conversationName: String,
+    val shouldDelete: Boolean = false
+) : GroupDialogState(conversationId, conversationName)

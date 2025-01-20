@@ -18,26 +18,31 @@
 
 package com.wire.android.ui.home.conversations.details.menu
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.wire.android.R
 import com.wire.android.ui.common.VisibilityState
 import com.wire.android.ui.common.WireDialog
 import com.wire.android.ui.common.WireDialogButtonProperties
 import com.wire.android.ui.common.WireDialogButtonType
+import com.wire.android.ui.common.WireLabelledCheckbox
 import com.wire.android.ui.common.button.WireButtonState
 import com.wire.android.ui.common.visbility.VisibilityState
-import com.wire.android.ui.home.conversationslist.model.GroupDialogState
+import com.wire.android.ui.home.conversationslist.model.LeaveGroupDialogState
 
 @Composable
 internal fun LeaveConversationGroupDialog(
-    dialogState: VisibilityState<GroupDialogState>,
+    dialogState: VisibilityState<LeaveGroupDialogState>,
     isLoading: Boolean,
-    onLeaveGroup: (GroupDialogState) -> Unit,
+    onLeaveGroup: (LeaveGroupDialogState) -> Unit,
 ) {
-    VisibilityState(dialogState) {
+    VisibilityState(dialogState) { state ->
         WireDialog(
-            title = stringResource(id = R.string.leave_group_conversation_dialog_title, it.conversationName),
+            title = stringResource(id = R.string.leave_group_conversation_dialog_title, state.conversationName),
             text = stringResource(id = R.string.leave_group_conversation_dialog_description),
             buttonsHorizontalAlignment = true,
             onDismiss = dialogState::dismiss,
@@ -47,7 +52,7 @@ internal fun LeaveConversationGroupDialog(
                 state = WireButtonState.Default
             ),
             optionButton1Properties = WireDialogButtonProperties(
-                onClick = { onLeaveGroup(it) },
+                onClick = { onLeaveGroup(state) },
                 text = stringResource(id = R.string.label_leave),
                 type = WireDialogButtonType.Primary,
                 state =
@@ -57,6 +62,14 @@ internal fun LeaveConversationGroupDialog(
                     WireButtonState.Error,
                 loading = isLoading
             )
-        )
+        ) {
+            WireLabelledCheckbox(
+                label = stringResource(R.string.leave_group_conversation_dialog_delete_fully_check),
+                checked = state.shouldDelete,
+                onCheckClicked = remember { { dialogState.show(state.copy(shouldDelete = it)) } },
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }

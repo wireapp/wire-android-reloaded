@@ -19,6 +19,7 @@
 package com.wire.android.ui.home.conversations.details
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.work.WorkManager
 import com.wire.android.config.CoroutineTestExtension
 import com.wire.android.config.NavigationTestExtension
 import com.wire.android.config.TestDispatcherProvider
@@ -746,6 +747,9 @@ internal class GroupConversationDetailsViewModelArrangement {
     @MockK
     lateinit var getDefaultProtocolUseCase: GetDefaultProtocolUseCase
 
+    @MockK
+    private lateinit var workManager: WorkManager
+
     private val viewModel by lazy {
         GroupConversationDetailsViewModel(
             dispatcher = TestDispatcherProvider(),
@@ -764,7 +768,8 @@ internal class GroupConversationDetailsViewModelArrangement {
             observeSelfDeletionTimerSettingsForConversation = observeSelfDeletionTimerSettingsForConversation,
             refreshUsersWithoutMetadata = refreshUsersWithoutMetadata,
             updateConversationArchivedStatus = updateConversationArchivedStatus,
-            getDefaultProtocol = getDefaultProtocolUseCase
+            getDefaultProtocol = getDefaultProtocolUseCase,
+            workManager = workManager
         )
     }
 

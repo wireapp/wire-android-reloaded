@@ -48,6 +48,7 @@ import com.wire.android.ui.home.conversationslist.common.GroupConversationAvatar
 import com.wire.android.ui.home.conversationslist.model.BlockingState
 import com.wire.android.ui.home.conversationslist.model.DialogState
 import com.wire.android.ui.home.conversationslist.model.GroupDialogState
+import com.wire.android.ui.home.conversationslist.model.LeaveGroupDialogState
 import com.wire.android.ui.home.conversationslist.model.getMutedStatusTextResource
 import com.wire.android.ui.theme.wireColorScheme
 import com.wire.android.ui.theme.wireTypography
@@ -68,7 +69,7 @@ internal fun ConversationMainSheetContent(
     clearConversationContent: (DialogState) -> Unit,
     blockUserClick: (BlockUserDialogState) -> Unit,
     unblockUserClick: (UnblockUserDialogState) -> Unit,
-    leaveGroup: (GroupDialogState) -> Unit,
+    leaveGroup: (LeaveGroupDialogState) -> Unit,
     deleteGroup: (GroupDialogState) -> Unit,
     deleteGroupLocally: (GroupDialogState) -> Unit,
     navigateToNotification: () -> Unit
@@ -294,7 +295,7 @@ internal fun ConversationMainSheetContent(
                         title = stringResource(R.string.label_leave_group),
                         onItemClick = {
                             leaveGroup(
-                                GroupDialogState(
+                                LeaveGroupDialogState(
                                     conversationSheetContent.conversationId,
                                     conversationSheetContent.title
                                 )
