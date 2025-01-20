@@ -335,4 +335,5 @@ Yedek dosyayı korumak için güçlü bir şifre seçin.</string>
     <!-- Debug Settings -->
     <string name="debug_settings_screen_title">Hata Ayıklama Günlüğü Ayarları</string>
     <!--    Personal to team migration screen-->
+    <!-- Move to Folder -->
 </resources>

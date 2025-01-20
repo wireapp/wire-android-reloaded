@@ -487,7 +487,6 @@ Até 500 pessoas podem participar de uma conversa em grupo.</string>
     <!-- Conversations BottomSheet -->
     <string name="label_notifications">Notificações</string>
     <string name="label_add_to_favourites">Adicionar aos Favoritos</string>
-    <string name="label_move_to_folder">Mover para Pasta</string>
     <string name="label_move_to_archive">Mover para Arquivo</string>
     <string name="label_unarchive">Desarquivar</string>
     <string name="label_clear_content">Limpar Conteúdo…</string>
@@ -1090,4 +1089,5 @@ Por favor, use o gerenciamento de equipe (%1$s) neste backend.</string>
     <!-- Debug Settings -->
     <string name="debug_settings_screen_title">Configurações de depuração</string>
     <!--    Personal to team migration screen-->
+    <!-- Move to Folder -->
 </resources>
