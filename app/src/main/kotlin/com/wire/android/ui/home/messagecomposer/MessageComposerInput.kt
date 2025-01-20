@@ -314,7 +314,8 @@ private fun MessageComposerTextInput(
             },
         interactionSource = interactionSource,
         onSelectedLineIndexChanged = onSelectedLineIndexChanged,
-        onLineBottomYCoordinateChanged = onLineBottomYCoordinateChanged
+        onLineBottomYCoordinateChanged = onLineBottomYCoordinateChanged,
+        singleLine = false,
     )
 }
 
