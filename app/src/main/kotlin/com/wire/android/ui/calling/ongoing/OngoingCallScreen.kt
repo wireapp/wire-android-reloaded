@@ -494,7 +494,7 @@ private fun OngoingCallContent(
             }
 
             AnimatedContent(
-                targetState = showInCallReactionsPanel,
+                targetState = showInCallReactionsPanel && !inPictureInPictureMode,
                 transitionSpec = {
                     val enter = slideInVertically(initialOffsetY = { it })
                     val exit = slideOutVertically(targetOffsetY = { it })
