@@ -23,6 +23,7 @@ import com.wire.android.di.ApplicationScope
 import com.wire.android.di.AuthServerConfigProvider
 import com.wire.android.navigation.BackStackMode
 import com.wire.android.navigation.NavigationCommand
+import com.wire.android.ui.authentication.welcome.WelcomeScreenNavArgs
 import com.wire.android.ui.destinations.HomeScreenDestination
 import com.wire.android.ui.destinations.WelcomeScreenDestination
 import com.wire.kalium.logic.data.auth.AccountInfo
@@ -212,5 +213,5 @@ interface SwitchAccountActions {
 
 class NavigationSwitchAccountActions(val navigate: (NavigationCommand) -> Unit) : SwitchAccountActions {
     override fun switchedToAnotherAccount() = navigate(NavigationCommand(HomeScreenDestination, BackStackMode.CLEAR_WHOLE))
-    override fun noOtherAccountToSwitch() = navigate(NavigationCommand(WelcomeScreenDestination, BackStackMode.CLEAR_WHOLE))
+    override fun noOtherAccountToSwitch() = navigate(NavigationCommand(WelcomeScreenDestination(WelcomeScreenNavArgs()), BackStackMode.CLEAR_WHOLE))
 }

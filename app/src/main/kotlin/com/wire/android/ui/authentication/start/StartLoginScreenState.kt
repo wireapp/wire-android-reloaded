@@ -1,6 +1,6 @@
 /*
  * Wire
- * Copyright (C) 2024 Wire Swiss GmbH
+ * Copyright (C) 2025 Wire Swiss GmbH
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
-package com.wire.android.ui.authentication.welcome
+package com.wire.android.ui.authentication.start
 
 import com.wire.kalium.logic.configuration.server.ServerConfig
 
-data class WelcomeScreenState(
+data class StartLoginScreenState(
     val links: ServerConfig.Links,
-    val isThereActiveSession: Boolean = false,
-    val maxAccountsReached: Boolean = false,
-    val startLoginDestination: StartLoginDestination = StartLoginDestination.Default,
+    val isThereActiveSession: Boolean = false
 )
-
-enum class StartLoginDestination {
-    Default,
-    CustomBackend,
-}

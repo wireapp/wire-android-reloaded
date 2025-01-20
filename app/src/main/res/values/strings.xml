@@ -251,7 +251,7 @@
     <string name="content_description_change_picture_back_btn">Go back to your profile overview</string>
     <string name="content_description_welcome_screen_close_btn">Close new team creation and login view</string>
     <string name="content_description_login_back_btn">Go back to new team creation and login view</string>
-    <string name="content_description_login_email_field">enter your email or username</string>
+    <string name="content_description_login_email_field">enter your email or sso code</string>
     <string name="content_description_login_password_field">enter your password</string>
     <string name="content_description_login_sso_code_field">enter your SSO code or Wire email</string>
     <string name="content_description_whats_new_welcome_item">Welcome to Wire\'s New Android App, link to support page</string>
@@ -358,6 +358,14 @@
     <string name="migration_messages_failure">Unfortunately, not all messages and conversations could not be migrated due to incompatibility with the older version of Wire (error code: %s)</string>
     <string name="migration_cancel_title">Cancel migration</string>
     <string name="migration_cancel_message">Are you sure you want to close the application and cancel the ongoing migration?</string>
+    <!-- Enterprise Login -->
+    <string name="enterprise_login_welcome">Enter your email to start!</string>
+    <string name="enterprise_login_title">Enter your password to log in</string>
+    <string name="enterprise_login_title_terms_description">By pressing on \"Next\", you accept Wire\'s</string>
+    <string name="enterprise_login_title_terms_link">Terms and Conditions</string>
+    <string name="enterprise_login_next">Next</string>
+    <string name="enterprise_login_user_identifier_label">EMAIL OR SSO CODE</string>
+    <string name="enterprise_login_user_identifier_label_placeholder">Enter Email or SSO Code</string>
     <!-- Login -->
     <string name="login_title">Log in</string>
     <string name="login_forgot_password">Forgot password?</string>

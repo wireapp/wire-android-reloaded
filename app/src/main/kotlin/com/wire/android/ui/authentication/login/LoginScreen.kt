@@ -22,28 +22,13 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.window.DialogProperties
@@ -59,32 +44,24 @@ import com.wire.android.ui.authentication.ServerTitle
 import com.wire.android.ui.authentication.login.email.LoginEmailScreen
 import com.wire.android.ui.authentication.login.email.LoginEmailVerificationCodeScreen
 import com.wire.android.ui.authentication.login.email.LoginEmailViewModel
-import com.wire.android.ui.authentication.login.sso.LoginSSOScreen
 import com.wire.android.ui.common.TabItem
 import com.wire.android.ui.common.WireDialog
 import com.wire.android.ui.common.WireDialogButtonProperties
 import com.wire.android.ui.common.WireDialogButtonType
-import com.wire.android.ui.common.WireTabRow
-import com.wire.android.ui.common.calculateCurrentTab
 import com.wire.android.ui.common.dialogs.FeatureDisabledWithProxyDialogContent
 import com.wire.android.ui.common.dialogs.FeatureDisabledWithProxyDialogState
-import com.wire.android.ui.common.rememberTopBarElevationState
-import com.wire.android.ui.common.scaffold.WireScaffold
-import com.wire.android.ui.common.topappbar.NavigationIconType
-import com.wire.android.ui.common.topappbar.WireCenterAlignedTopAppBar
+import com.wire.android.ui.common.spacers.VerticalSpace
 import com.wire.android.ui.common.visbility.rememberVisibilityState
 import com.wire.android.ui.destinations.E2EIEnrollmentScreenDestination
 import com.wire.android.ui.destinations.HomeScreenDestination
 import com.wire.android.ui.destinations.InitialSyncScreenDestination
 import com.wire.android.ui.destinations.RemoveDeviceScreenDestination
 import com.wire.android.ui.theme.WireTheme
-import com.wire.android.ui.theme.wireDimensions
 import com.wire.android.ui.theme.wireTypography
 import com.wire.android.util.deeplink.DeepLinkResult
 import com.wire.android.util.dialogErrorStrings
 import com.wire.android.util.ui.PreviewMultipleThemes
 import com.wire.android.util.ui.UIText
-import kotlinx.coroutines.launch
 
 @RootNavGraph
 @WireDestination(
@@ -96,22 +73,27 @@ fun LoginScreen(
     loginNavArgs: LoginNavArgs,
     loginEmailViewModel: LoginEmailViewModel = hiltViewModel()
 ) {
+    NewLoginContainer(
+        title = stringResource(id = R.string.enterprise_login_title),
+        canNavigateBack = true,
+        onNavigateBack = navigator::navigateBack
+    ) {
+        LoginContent(
+            onBackPressed = navigator::navigateBack,
+            onSuccess = { initialSyncCompleted, isE2EIRequired ->
+                val destination = if (isE2EIRequired) E2EIEnrollmentScreenDestination
+                else if (initialSyncCompleted) HomeScreenDestination
+                else InitialSyncScreenDestination
 
-    LoginContent(
-        onBackPressed = navigator::navigateBack,
-        onSuccess = { initialSyncCompleted, isE2EIRequired ->
-            val destination = if (isE2EIRequired) E2EIEnrollmentScreenDestination
-            else if (initialSyncCompleted) HomeScreenDestination
-            else InitialSyncScreenDestination
-
-            navigator.navigate(NavigationCommand(destination, BackStackMode.CLEAR_WHOLE))
-        },
-        onRemoveDeviceNeeded = {
-            navigator.navigate(NavigationCommand(RemoveDeviceScreenDestination, BackStackMode.CLEAR_WHOLE))
-        },
-        loginEmailViewModel = loginEmailViewModel,
-        ssoLoginResult = loginNavArgs.ssoLoginResult
-    )
+                navigator.navigate(NavigationCommand(destination, BackStackMode.CLEAR_WHOLE))
+            },
+            onRemoveDeviceNeeded = {
+                navigator.navigate(NavigationCommand(RemoveDeviceScreenDestination, BackStackMode.CLEAR_WHOLE))
+            },
+            loginEmailViewModel = loginEmailViewModel,
+            ssoLoginResult = loginNavArgs.ssoLoginResult
+        )
+    }
 }
 
 @Composable
@@ -122,7 +104,11 @@ private fun LoginContent(
     loginEmailViewModel: LoginEmailViewModel,
     ssoLoginResult: DeepLinkResult.SSOLogin?
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxHeight(0.6f)
+            .fillMaxWidth()
+    ) {
         /*
          TODO: we can change it to be a nested navigation graph when Compose Destinations 2.0 is released,
                right now it's not possible to make start destination for nested graph with mandatory arguments.
@@ -151,84 +137,66 @@ private fun MainLoginContent(
     ssoLoginResult: DeepLinkResult.SSOLogin?
 ) {
 
-    val scope = rememberCoroutineScope()
-    val scrollState = rememberScrollState()
-    val initialPageIndex = if (ssoLoginResult == null) LoginTabItem.EMAIL.ordinal else LoginTabItem.SSO.ordinal
-    val pagerState = rememberPagerState(
-        initialPage = initialPageIndex,
-        pageCount = { LoginTabItem.values().size }
-    )
-
     val ssoDisabledWithProxyDialogState = rememberVisibilityState<FeatureDisabledWithProxyDialogState>()
     FeatureDisabledWithProxyDialogContent(dialogState = ssoDisabledWithProxyDialogState)
 
-    WireScaffold(
-        topBar = {
-            WireCenterAlignedTopAppBar(
-                elevation = scrollState.rememberTopBarElevationState().value,
-                title = stringResource(R.string.login_title),
-                subtitleContent = {
-                    if (loginEmailViewModel.serverConfig.isOnPremises) {
-                        ServerTitle(
-                            serverLinks = loginEmailViewModel.serverConfig,
-                            style = MaterialTheme.wireTypography.body01
-                        )
-                    }
-                },
-                onNavigationPressed = onBackPressed,
-                navigationIconType = NavigationIconType.Back(R.string.content_description_login_back_btn)
-            ) {
-                WireTabRow(
-                    tabs = LoginTabItem.values().toList(),
-                    selectedTabIndex = pagerState.calculateCurrentTab(),
-                    onTabChange = {
+//    var focusedTabIndex: Int by remember { mutableStateOf(initialPageIndex) }
+//    val keyboardController = LocalSoftwareKeyboardController.current
+//    val focusManager = LocalFocusManager.current
 
-                        if (loginEmailViewModel.serverConfig.isProxyEnabled) {
-                            if (pagerState.currentPage != LoginTabItem.SSO.ordinal) {
-                                ssoDisabledWithProxyDialogState.show(
-                                    ssoDisabledWithProxyDialogState.savedState ?: FeatureDisabledWithProxyDialogState(
-                                        R.string.sso_not_supported_dialog_description
-                                    )
-                                )
-                            }
-                        } else {
-                            scope.launch { pagerState.animateScrollToPage(it) }
-                        }
-                    },
-                    modifier = Modifier.padding(
-                        start = MaterialTheme.wireDimensions.spacing16x,
-                        end = MaterialTheme.wireDimensions.spacing16x
-                    ),
-                )
-            }
-        },
-        modifier = Modifier.fillMaxHeight(),
-    ) { internalPadding ->
-        var focusedTabIndex: Int by remember { mutableStateOf(initialPageIndex) }
-        val keyboardController = LocalSoftwareKeyboardController.current
-        val focusManager = LocalFocusManager.current
-
-        CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(internalPadding)
-            ) { pageIndex ->
-                when (LoginTabItem.values()[pageIndex]) {
-                    LoginTabItem.EMAIL -> LoginEmailScreen(onSuccess, onRemoveDeviceNeeded, loginEmailViewModel, scrollState)
-                    LoginTabItem.SSO -> LoginSSOScreen(onSuccess, onRemoveDeviceNeeded, ssoLoginResult)
-                }
-            }
-            if (!pagerState.isScrollInProgress && focusedTabIndex != pagerState.currentPage) {
-                LaunchedEffect(Unit) {
-                    keyboardController?.hide()
-                    focusManager.clearFocus()
-                    focusedTabIndex = pagerState.currentPage
-                }
-            }
-        }
+    if (loginEmailViewModel.serverConfig.isOnPremises) {
+        ServerTitle(
+            serverLinks = loginEmailViewModel.serverConfig,
+            style = MaterialTheme.wireTypography.body01
+        )
+        VerticalSpace.x8()
     }
+    LoginEmailScreen(onSuccess, onRemoveDeviceNeeded, loginEmailViewModel)
+
+
+//    CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
+//        HorizontalPager(
+//            state = pagerState,
+//            modifier = Modifier
+//                .fillMaxWidth()
+//        ) { pageIndex ->
+//            when (LoginTabItem.values()[pageIndex]) {
+//                LoginTabItem.EMAIL ->
+//                LoginTabItem.SSO -> LoginSSOScreen(onSuccess, onRemoveDeviceNeeded, ssoLoginResult)
+//            }
+//        }
+//        if (!pagerState.isScrollInProgress && focusedTabIndex != pagerState.currentPage) {
+//            LaunchedEffect(Unit) {
+//                keyboardController?.hide()
+//                focusManager.clearFocus()
+//                focusedTabIndex = pagerState.currentPage
+//            }
+//        }
+//    }
+
+//    WireScaffold(
+//        topBar = {
+//            WireCenterAlignedTopAppBar(
+//                elevation = scrollState.rememberTopBarElevationState().value,
+//                title = stringResource(R.string.login_title),
+//                subtitleContent = {
+//                    if (loginEmailViewModel.serverConfig.isOnPremises) {
+//                        ServerTitle(
+//                            serverLinks = loginEmailViewModel.serverConfig,
+//                            style = MaterialTheme.wireTypography.body01
+//                        )
+//                    }
+//                },
+//                onNavigationPressed = onBackPressed,
+//                navigationIconType = NavigationIconType.Back(R.string.content_description_login_back_btn)
+//            ) {
+//
+//            }
+//        },
+//        modifier = Modifier.fillMaxHeight(),
+//    ) { internalPadding ->
+//
+//    }
 }
 
 @Composable
@@ -314,6 +282,7 @@ fun LoginErrorDialog(
                 onDismiss = onDialogDismiss
             )
         }
+
         LoginState.Error.TextFieldError.InvalidValue,
         LoginState.Error.DialogError.PasswordNeededToRegisterClient,
         LoginState.Error.TooManyDevicesError -> {
@@ -354,6 +323,7 @@ data class LoginDialogErrorData(
 enum class LoginTabItem(@StringRes val titleResId: Int) : TabItem {
     EMAIL(R.string.login_tab_email),
     SSO(R.string.login_tab_sso);
+
     override val title: UIText = UIText.StringResource(titleResId)
 }
 

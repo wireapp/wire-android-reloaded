@@ -21,10 +21,12 @@ package com.wire.android.ui.authentication.welcome
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wire.android.BuildConfig
 import com.wire.android.di.AuthServerConfigProvider
+import com.wire.android.ui.navArgs
 import com.wire.kalium.logic.configuration.server.ServerConfig
 import com.wire.kalium.logic.data.auth.AccountInfo
 import com.wire.kalium.logic.feature.session.GetAllSessionsResult
@@ -35,16 +37,19 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WelcomeViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val authServerConfigProvider: AuthServerConfigProvider,
-    private val getSessions: GetSessionsUseCase
+    private val getSessions: GetSessionsUseCase,
 ) : ViewModel() {
 
+    private val welcomeScreenNavArgs: WelcomeScreenNavArgs = savedStateHandle.navArgs()
     var state by mutableStateOf(WelcomeScreenState(ServerConfig.DEFAULT))
         private set
 
     init {
         observerAuthServer()
         checkNumberOfSessions()
+        resolveNavigationToStartLogin()
     }
 
     private fun observerAuthServer() {
@@ -72,6 +77,14 @@ class WelcomeViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    private fun resolveNavigationToStartLogin() {
+        state = if (welcomeScreenNavArgs.isCustomBackend) {
+            state.copy(startLoginDestination = StartLoginDestination.CustomBackend)
+        } else {
+            state.copy(startLoginDestination = StartLoginDestination.Default)
         }
     }
 }

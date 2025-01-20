@@ -35,7 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @ExtendWith(CoroutineTestExtension::class)
-class WelcomeViewModelTest {
+class StartLoginViewModelTest {
 
     @MockK
     lateinit var authServerConfigProvider: AuthServerConfigProvider

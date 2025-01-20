@@ -59,7 +59,6 @@ import com.wire.android.ui.authentication.login.isProxyAuthRequired
 import com.wire.android.ui.common.button.WireButtonState
 import com.wire.android.ui.common.button.WirePrimaryButton
 import com.wire.android.ui.common.colorsScheme
-import com.wire.android.ui.common.rememberBottomBarElevationState
 import com.wire.android.ui.common.textfield.DefaultEmailNext
 import com.wire.android.ui.common.textfield.DefaultPassword
 import com.wire.android.ui.common.textfield.WireAutoFillType
@@ -195,8 +194,7 @@ private fun LoginEmailContent(
         }
 
         Surface(
-            shadowElevation = scrollState.rememberBottomBarElevationState().value,
-            color = MaterialTheme.wireColorScheme.background,
+            color = MaterialTheme.wireColorScheme.surface,
             modifier = Modifier.semantics {
                 testTagsAsResourceId = true
             }

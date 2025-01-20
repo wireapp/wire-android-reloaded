@@ -52,6 +52,7 @@ import com.wire.android.navigation.BackStackMode
 import com.wire.android.navigation.NavigationCommand
 import com.wire.android.navigation.Navigator
 import com.wire.android.navigation.WireDestination
+import com.wire.android.ui.authentication.welcome.WelcomeScreenNavArgs
 import com.wire.android.ui.common.WireDialog
 import com.wire.android.ui.common.WireDialogButtonProperties
 import com.wire.android.ui.common.WireDialogButtonType
@@ -76,7 +77,7 @@ fun ForgotLockCodeScreen(
 ) {
     with(viewModel.state) {
         LaunchedEffect(completed) {
-            if (completed) navigator.navigate(NavigationCommand(WelcomeScreenDestination, BackStackMode.CLEAR_WHOLE))
+            if (completed) navigator.navigate(NavigationCommand(WelcomeScreenDestination(WelcomeScreenNavArgs()), BackStackMode.CLEAR_WHOLE))
         }
         ForgotLockCodeScreenContent(
             scrollState = rememberScrollState(),
